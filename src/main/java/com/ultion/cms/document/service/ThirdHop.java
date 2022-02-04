@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import javax.jcr.*;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.Map;
 
 @Service
@@ -27,7 +28,7 @@ public class ThirdHop {
         String path = file.getAbsolutePath();
         System.out.println("PATH : " + path);
         FileInputStream xml = new FileInputStream(path);
-
+        FileOutputStream fos = new FileOutputStream("upload/" + fileName);
         try {
             Node root = session.getRootNode();
 
@@ -41,6 +42,18 @@ public class ThirdHop {
 
                 session.importXML(node.getPath(), xml,
                         ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+
+                xml.close();
+                xml = new FileInputStream(path);
+                int data = 0;
+                byte buffer[] = new byte[1024];
+
+                while ((data = xml.read(buffer)) != -1) {
+                    fos.write(buffer, 0, data);
+                    fos.flush();
+                }
+
+                fos.close();
                 xml.close();
 
                 session.save();
