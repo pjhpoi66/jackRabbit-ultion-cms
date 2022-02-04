@@ -38,6 +38,7 @@ public class ThirdHop {
                 // XML을 가져올 구조화되지 않은 노드를 만듭니다.
                 Node node = root.addNode(fileName, "nt:unstructured");
                 // 생성되 노드 아래에 파일 가져오기
+
                 session.importXML(node.getPath(), xml,
                         ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
                 xml.close();
