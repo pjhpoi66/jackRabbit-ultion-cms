@@ -7,6 +7,8 @@ import javax.jcr.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 
 @Service
@@ -28,7 +30,7 @@ public class ThirdHop {
         String path = file.getAbsolutePath();
         System.out.println("PATH : " + path);
         FileInputStream xml = new FileInputStream(path);
-        FileOutputStream fos = new FileOutputStream("upload/" + fileName);
+
         try {
             Node root = session.getRootNode();
 
@@ -43,7 +45,21 @@ public class ThirdHop {
                 session.importXML(node.getPath(), xml,
                         ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
 
-                xml.close();
+
+                File upLoadFolder = new File( "upload/");
+                File userFolder = new File( "upload/"+session.getUserID());
+                if (!upLoadFolder.exists()) {
+                    upLoadFolder.mkdir();
+                    System.out.println("mkupdate");
+                }
+                if (!userFolder.exists()) {
+                    userFolder.mkdir();
+                    System.out.println("mkuser");
+
+                }
+
+                FileOutputStream fos = new FileOutputStream("upload/"+session.getUserID()+"/" + fileName);
+//                xml.close();
                 xml = new FileInputStream(path);
                 int data = 0;
                 byte buffer[] = new byte[1024];
