@@ -1,29 +1,24 @@
 package com.ultion.cms.document.service;
 
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.jcr.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Service
 public class ThirdHop {
 
-    /**
-     * The main entry point of the example application.
-     *
-     * @throws Exception if an error occurs
-     */
     public void three(Map<String, Object> param) throws Exception {
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin",
                 "admin".toCharArray()));
-
         File file = (File) param.get("file");
         String fileName = file.getName();
         System.out.println("FILE NAME : " + fileName);
@@ -46,8 +41,8 @@ public class ThirdHop {
                         ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
 
 
-                File upLoadFolder = new File( "upload/");
-                File userFolder = new File( "upload/"+session.getUserID());
+                File upLoadFolder = new File("upload/");
+                File userFolder = new File("upload/" + session.getUserID());
                 if (!upLoadFolder.exists()) {
                     upLoadFolder.mkdir();
                     System.out.println("mkupdate");
@@ -58,7 +53,7 @@ public class ThirdHop {
 
                 }
 
-                FileOutputStream fos = new FileOutputStream("upload/"+session.getUserID()+"/" + fileName);
+                FileOutputStream fos = new FileOutputStream("upload/" + session.getUserID() + "/" + fileName);
 //                xml.close();
                 xml = new FileInputStream(path);
                 int data = 0;
@@ -86,10 +81,20 @@ public class ThirdHop {
     /**
      * 주어진 노드의 내용을 재귀적으로 출력한다
      */
+    static List<String> fileNames = new ArrayList<>();
+
     private static void dump(Node node) throws RepositoryException {
+
         // 노드경로 출력
         System.out.println("노드 경로: " + node.getPath());
         // Skip the virtual (and large!) jcr:system subtree
+        System.out.println("노드 이름: " + node.getName());
+        if (1 == node.getDepth()) {
+            fileNames.add(node.getName());
+        }
+        System.out.println("리스트" + fileNames);
+
+        System.out.println("노드 Depth: " + node.getDepth());
         if (node.getName().equals("jcr:system")) {
             return;
         }
