@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Food>
+    <Fruits>
+        <Fruit>
+            <Name>Apple</Name>
+            <Color>Red</Color>
+        </Fruit>
+        <Fruit>
+            <Name>Melon</Name>
+            <Color>Green</Color>
+        </Fruit>
+    </Fruits>
+    <Meats>
+        <Meat>
+            <Name>Fork</Name>
+        </Meat>
+        <Meat>
+            <Name>Beef</Name>
+        </Meat>
+    </Meats>
+</Food>

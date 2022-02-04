@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<Cars>
+    <Car>
+        <Name>HYUNDAI SONATA 2.0</Name>
+        <Price>3318</Price>
+    </Car>
+    <Car>
+        <Name>KIA K8 2.5</Name>
+        <Price>3868</Price>
+    </Car>
+    <Car>
+        <Name>Porsche Taycan Turbo S</Name>
+        <Price>23760</Price>
+    </Car>
+</Cars>

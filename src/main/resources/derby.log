@@ -1,0 +1,39 @@
+----------------------------------------------------------------
+Fri Feb 04 13:33:11 KST 2022:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.1.0 - (1808820): instance a816c00e-017e-c301-f17f-00001de279a0 
+on database directory C:\Users\user\ideaProjects\spring-boot-jackrabbit\jackrabbit_456\version\db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1f89ab83 
+Loaded from file:/C:/Users/user/.m2/repository/org/apache/derby/derby/10.14.1.0/derby-10.14.1.0.jar
+java.vendor=Amazon.com Inc.
+java.runtime.version=11.0.13+8-LTS
+user.dir=C:\Users\user\ideaProjects\spring-boot-jackrabbit
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Fri Feb 04 13:33:12 KST 2022:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.1.0 - (1808820): instance cead00d8-017e-c301-f17f-00001de279a0 
+on database directory C:\Users\user\ideaProjects\spring-boot-jackrabbit\jackrabbit_456\workspaces\default\db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1f89ab83 
+Loaded from file:/C:/Users/user/.m2/repository/org/apache/derby/derby/10.14.1.0/derby-10.14.1.0.jar
+java.vendor=Amazon.com Inc.
+java.runtime.version=11.0.13+8-LTS
+user.dir=C:\Users\user\ideaProjects\spring-boot-jackrabbit
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
+----------------------------------------------------------------
+Fri Feb 04 13:33:12 KST 2022:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.14.1.0 - (1808820): instance f584c1a3-017e-c301-f17f-00001de279a0 
+on database directory C:\Users\user\ideaProjects\spring-boot-jackrabbit\jackrabbit_456\workspaces\security\db with class loader jdk.internal.loader.ClassLoaders$AppClassLoader@1f89ab83 
+Loaded from file:/C:/Users/user/.m2/repository/org/apache/derby/derby/10.14.1.0/derby-10.14.1.0.jar
+java.vendor=Amazon.com Inc.
+java.runtime.version=11.0.13+8-LTS
+user.dir=C:\Users\user\ideaProjects\spring-boot-jackrabbit
+os.name=Windows 10
+os.arch=amd64
+os.version=10.0
+derby.system.home=null
+Database Class Loader started - derby.database.classpath=''
