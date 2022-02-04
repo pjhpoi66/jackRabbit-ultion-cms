@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportResource;
 
 @SpringBootApplication
-@ImportResource("${spring.config.path}")
+@ImportResource("classpath:application-context.xml")
 public class JackRabbitUltionCmsApplication {
 
     public static void main(String[] args) {
