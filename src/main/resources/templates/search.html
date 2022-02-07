@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>폴더</title>
+</head>
+<body>
+
+<table>
+    <thead>
+    <tr>
+        <th>유형   </th>
+        <th>이름</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="file : ${fileList}">
+        <td th:text="${file.getType()}"></td>
+        <td th:if="${file.getType()} == 'file' "> <a th:href="@{'search/'+${file.getName()}}" th:text="${file.getName()}"></a></td>
+        <td th:if="${file.getType()} != 'file' "><span  th:text="${file.getName()}"></span></td>
+    </tr>
+    </tbody>
+
+</table>
+
+</body>
+</html>

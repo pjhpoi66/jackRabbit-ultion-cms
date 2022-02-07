@@ -1,6 +1,7 @@
 package com.ultion.cms.document.controller;
 
-import com.ultion.cms.document.service.ThirdHop;
+import com.ultion.cms.document.service.UploadService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,14 +13,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Controller
+@RequiredArgsConstructor
 public class DocumentController {
 
-    final
-    ThirdHop thirdHop;
-
-    public DocumentController(ThirdHop thirdHop) {
-        this.thirdHop = thirdHop;
-    }
+    private final UploadService uploadService;
 
     @GetMapping("/three")
     public ModelAndView getDocument() {
@@ -30,8 +27,10 @@ public class DocumentController {
     public ModelAndView fileUpload(@RequestParam("file") File file) throws Exception {
         Map<String, Object> param = new HashMap<>();
         param.put("file", file);
-        thirdHop.three(param);
+        uploadService.upload(param, "admin", "admin");
         return new ModelAndView("index");
     }
+
+
 
 }
