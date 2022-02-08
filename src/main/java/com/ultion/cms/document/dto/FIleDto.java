@@ -8,4 +8,5 @@ import lombok.Getter;
 public class FIleDto {
     private String type;
     private String name;
+    private String path;
 }

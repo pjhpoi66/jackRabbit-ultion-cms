@@ -5,9 +5,11 @@ import com.ultion.cms.document.service.FileDownloadService;
 import com.ultion.cms.document.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.stream.Collectors;
 
 @Controller
@@ -17,7 +19,6 @@ public class SearchController {
     private final SearchService searchService;
     private final FileDownloadService downloadService;
 
-
     @GetMapping("/search")
     public ModelAndView getSearch() {
         ModelAndView modelAndView = new ModelAndView();
@@ -26,7 +27,7 @@ public class SearchController {
                 .map(file -> {
                     return FIleDto.builder().name(file.getName()).type(
                             file.isFile() ? "file" : file.isDirectory() ? "folder" : "unknown"
-                    ).build();
+                    ).path(file.getAbsolutePath()).build();
                 }).collect(Collectors.toList()));
 
 
@@ -37,17 +38,13 @@ public class SearchController {
 
     }
 
-    @GetMapping("/search/{path}")
-    public String downLoad(@PathVariable String path) {
+    @PostMapping("/download")
+    public void download(HttpServletResponse response ,String path) throws Exception {
 
-        ModelAndView modelAndView = new ModelAndView();
+        System.out.println(path);
 
-        modelAndView.setViewName("search");
-
-        System.out.println("파일다운");
-        downloadService.fileDown("upload/admin"+path);
-
-        return "redirect:/search";
+        downloadService.fileDown(response, path);
     }
+
 
 }

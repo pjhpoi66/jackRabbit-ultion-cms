@@ -18,19 +18,31 @@ public class DocumentController {
 
     private final UploadService uploadService;
 
-    @GetMapping("/three")
+    @GetMapping("/")
     public ModelAndView getDocument() {
         return new ModelAndView("index");
     }
 
-    @PostMapping("/three/upload")
-    public ModelAndView fileUpload(@RequestParam("file") File file) throws Exception {
-        Map<String, Object> param = new HashMap<>();
-        param.put("file", file);
-        uploadService.upload(param, "admin", "admin");
-        return new ModelAndView("index");
+    @GetMapping("/upload")
+    public String urlLocated() {
+        return "redirect:/";
     }
 
+
+    @PostMapping("/upload")
+    public ModelAndView fileUpload(@RequestParam("file") File file) throws Exception {
+        ModelAndView modelAndView = new ModelAndView("upload");
+
+        Map<String, Object> param = new HashMap<>();
+        param.put("file", file);
+
+        if (file == null) {
+            return new ModelAndView("index");
+        }
+        String success = (uploadService.upload(param, "admin", "admin"));
+        modelAndView.addObject("success", success);
+        return modelAndView;
+    }
 
 
 }

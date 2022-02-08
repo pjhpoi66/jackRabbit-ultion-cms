@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>업로드 페이지 </title>
+    <link rel="icon" href="../static/favicon.ico">
+</head>
+<body>
+
+
+
+<script type="text/javascript" th:inline="javascript">
+
+
+    let success = /*[[${success}]]*/;
+
+
+    if (success == 'fail') {
+        alert("파일전송에 실패하였습니다");
+        location.href="/";
+    }else if (success == 'success') {
+        alert("파일 전송에 성공하였습니다");
+        location.href = "/";
+    } else {
+        alert("알주없는 오류");
+        location.href = "/";
+    }
+
+</script>
+
+</body>
+</html>

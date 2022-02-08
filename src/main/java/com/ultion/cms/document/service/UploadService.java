@@ -4,9 +4,7 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.springframework.stereotype.Service;
 
 import javax.jcr.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.util.Map;
 
 @Service
@@ -14,7 +12,7 @@ public class UploadService {
 
     private final String UPLOAD_PATH = "upload/";
 
-    public void upload(Map<String, Object> param, String userName, String password) throws Exception {
+    public String upload(Map<String, Object> param, String userName, String password) throws Exception {
 
 
         Repository repository = JcrUtils.getRepository();
@@ -25,7 +23,9 @@ public class UploadService {
         File file = (File) param.get("file");
         String fileName = file.getName();
         String path = file.getAbsolutePath();
-        FileInputStream fis = new FileInputStream(path);
+
+
+        FileInputStream fis = null;
 
         final String USER_PATH = UPLOAD_PATH + session.getUserID();
 
@@ -38,20 +38,21 @@ public class UploadService {
             userFolder.mkdir();
         }
 
-        FileOutputStream fos = new FileOutputStream(USER_PATH + "/" + fileName);
-        fis = new FileInputStream(path);
-        int data;
-        byte[] buffer = new byte[1024];
-
-        while ((data = fis.read(buffer)) != -1) {
-            fos.write(buffer, 0, data);
-            fos.flush();
-        }
+        FileOutputStream fos = null;
 
 
         try {
             Node root = session.getRootNode();
             // 가져오지 않았을경우 XML파일을 가져온다
+            fis = new FileInputStream(path);
+            fos = new FileOutputStream(USER_PATH + "/" + fileName);
+            int data;
+            byte[] buffer = new byte[1024];
+
+            while ((data = fis.read(buffer)) != -1) {
+                fos.write(buffer, 0, data);
+                fos.flush();
+            }
             if (!root.hasNode(fileName)) {
                 // XML 을 가져올 구조화되지 않은 노드를 만듭니다.
                 Node node = root.addNode(fileName, "nt:unstructured");
@@ -66,11 +67,14 @@ public class UploadService {
 
             //저장소 내용 출력
             dump(root);
+        } catch (Exception e) {
+            return "fail";
         } finally {
             session.logout();
-            fos.close();
-            fis.close();
+            if (fos != null) fos.close();
+            if (fis != null) fis.close();
         }
+        return "success";
     }
 
     /**

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>폴더</title>
+</head>
+<body>
+
+<table>
+    <thead>
+    <tr>
+        <th>유형   </th>
+        <th>이름</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    <tr th:each="file : ${fileList}">
+        <td th:text="${file.getType()}"></td>
+        <td th:if="${file.getType()} == 'file' "> <a th:href="@{/search/__${file.getPath()}__}"  th:text="${file.getName()}"></a></td>
+        <td th:if="${file.getType()} != 'file' "><span  th:text="${file.getName()}"></span></td>
+        <form></form>
+    </tr>
+    </tbody>
+
+</table>
+
+
+
+<script th:inline="javascript">
+    function downLoad(url, path) {
+        let form = document.createElement("form");
+
+
+        form.setAttribute('method', 'post');
+        form.setAttribute('action', url);
+
+
+
+    }
+</script>
+
+</body>
+</html>
