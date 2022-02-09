@@ -1,15 +1,21 @@
 package com.ultion.cms.document.service;
 
+import com.ultion.cms.test.VersioningService;
+import lombok.RequiredArgsConstructor;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.springframework.stereotype.Service;
 
 import javax.jcr.*;
+import javax.jcr.version.VersionException;
 import java.io.*;
 import java.util.Map;
 
 @Service
+@RequiredArgsConstructor
 public class UploadService {
 
+
+    private final VersioningService versioningService;
     private final String UPLOAD_PATH = "upload/";
 
     public String upload(Map<String, Object> param, String userName, String password) throws Exception {
@@ -25,7 +31,6 @@ public class UploadService {
         String path = file.getAbsolutePath();
 
 
-        FileInputStream fis = null;
 
         final String USER_PATH = UPLOAD_PATH + session.getUserID();
 
@@ -38,14 +43,12 @@ public class UploadService {
             userFolder.mkdir();
         }
 
-        FileOutputStream fos = null;
 
+        try (FileInputStream fis = new FileInputStream(path);
+             FileOutputStream fos = new FileOutputStream(USER_PATH + "/" + fileName);) {
 
-        try {
             Node root = session.getRootNode();
             // 가져오지 않았을경우 XML파일을 가져온다
-            fis = new FileInputStream(path);
-            fos = new FileOutputStream(USER_PATH + "/" + fileName);
             int data;
             byte[] buffer = new byte[1024];
 
@@ -53,26 +56,33 @@ public class UploadService {
                 fos.write(buffer, 0, data);
                 fos.flush();
             }
+
+
             if (!root.hasNode(fileName)) {
                 // XML 을 가져올 구조화되지 않은 노드를 만듭니다.
                 Node node = root.addNode(fileName, "nt:unstructured");
                 // 생성되 노드 아래에 파일 가져오기
 
+
                 session.importXML(node.getPath(), fis,
                         ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-
+                versioningService.versioningBasic(root, session);
                 session.save();
+
                 System.out.println("done.");
             }
-
             //저장소 내용 출력
             dump(root);
-        } catch (Exception e) {
+        } catch (IOException e) {
+            e.printStackTrace();
             return "fail";
+        } catch (VersionException e) {
+            System.out.println("버전오류");
+            e.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         } finally {
             session.logout();
-            if (fos != null) fos.close();
-            if (fis != null) fis.close();
         }
         return "success";
     }

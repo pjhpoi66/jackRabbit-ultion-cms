@@ -3,6 +3,7 @@ package com.ultion.cms.document.controller;
 import com.ultion.cms.document.dto.FIleDto;
 import com.ultion.cms.document.service.FileDownloadService;
 import com.ultion.cms.document.service.SearchService;
+import com.ultion.cms.test.VersioningService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +19,7 @@ public class SearchController {
 
     private final SearchService searchService;
     private final FileDownloadService downloadService;
+    private final VersioningService versioningService;
 
     @GetMapping("/search")
     public ModelAndView getSearch() {
@@ -45,6 +47,8 @@ public class SearchController {
 
         downloadService.fileDown(response, path);
     }
+
+
 
 
 }
