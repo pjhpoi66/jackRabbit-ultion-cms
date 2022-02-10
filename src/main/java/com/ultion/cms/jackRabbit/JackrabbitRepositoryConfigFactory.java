@@ -4,6 +4,7 @@ import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfigurationParser;
 import org.springframework.beans.factory.BeanCreationException;
+import org.springframework.beans.factory.annotation.Value;
 import org.xml.sax.InputSource;
 
 import java.io.FileNotFoundException;
@@ -12,6 +13,8 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class JackrabbitRepositoryConfigFactory {
+
+    @Value("${jcr.rep.home}")
     private static final String JCR_REP_HOME = "jcr.rep.home";
 
     private String jcrHome;
@@ -19,6 +22,10 @@ public class JackrabbitRepositoryConfigFactory {
     private String configFilename = "repository.xml";
 
     private String propertiesFilename = "jackrabbit.properties";
+
+    public JackrabbitRepositoryConfigFactory(){
+        System.out.println("1111111111111111111111111");
+    }
 
     /**
      * Creates a JackRabbit RepositoryConfig. Reads properties from file and add default

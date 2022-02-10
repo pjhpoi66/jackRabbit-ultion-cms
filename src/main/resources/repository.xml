@@ -167,7 +167,7 @@
     </SearchIndex>
 
     <DataStore class="org.apache.jackrabbit.core.data.FileDataStore">
-        <param name="path" value="${rep.home}/repository/datastore123"/>
+        <param name="path" value="${rep.home}/repository/datastore"/>
         <param name="minRecordLength" value="10"/>
 
     </DataStore>

@@ -1,7 +1,9 @@
 package com.ultion.cms.document.service;
 
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.jackrabbit.core.data.DataIdentifier;
+import org.apache.jackrabbit.core.data.DataRecord;
+import org.apache.jackrabbit.core.data.FileDataStore;
 import org.springframework.stereotype.Service;
 
 import javax.jcr.*;
@@ -9,11 +11,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class ThirdHop {
+
+    @org.springframework.beans.factory.annotation.Value("${jcr.rep.home}")
+    private String jcrHome;
 
     public void three(Map<String, Object> param) throws Exception {
         Repository repository = JcrUtils.getRepository();
@@ -54,7 +60,6 @@ public class ThirdHop {
                 }
 
                 FileOutputStream fos = new FileOutputStream("upload/" + session.getUserID() + "/" + fileName);
-//                xml.close();
                 xml = new FileInputStream(path);
                 int data = 0;
                 byte buffer[] = new byte[1024];
@@ -62,6 +67,19 @@ public class ThirdHop {
                 while ((data = xml.read(buffer)) != -1) {
                     fos.write(buffer, 0, data);
                     fos.flush();
+                }
+                xml = new FileInputStream(path);
+                FileDataStore fileDataStore = new FileDataStore();
+                fileDataStore.init(jcrHome);
+                fileDataStore.addRecord(xml);
+
+                Iterator<DataIdentifier> iterator = fileDataStore.getAllIdentifiers();
+
+                while (iterator.hasNext()) {
+                    DataIdentifier dataIdentifier = iterator.next();
+                    System.out.println("데스토어 IDS" + dataIdentifier);
+                    DataRecord dataRecord = fileDataStore.getRecordIfStored(dataIdentifier);
+                    System.out.println("레코드 레퍼런스 : " + dataRecord.getReference());
                 }
 
                 fos.close();
