@@ -1,4 +1,5 @@
-        <!--
+
+<!--
 
            Licensed to the Apache Software Foundation (ASF) under one or more
            contributor license agreements.  See the NOTICE file distributed with
@@ -21,6 +22,7 @@
              - org.apache.jackrabbit.core.config.RepositoryConfigTest.java
              -
         -->
+
 <Repository>
     <!--
 
@@ -163,4 +165,11 @@
         <param name="extractorPoolSize" value="2"/>
         <param name="supportHighlighting" value="true"/>
     </SearchIndex>
+
+    <DataStore class="org.apache.jackrabbit.core.data.FileDataStore">
+        <param name="path" value="${rep.home}/repository/datastore123"/>
+        <param name="minRecordLength" value="10"/>
+
+    </DataStore>
+
 </Repository>
