@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import javax.jcr.*;
 import javax.jcr.version.VersionException;
 import java.io.*;
+import java.net.URLConnection;
+import java.util.Calendar;
 import java.util.Map;
 
 @Service
@@ -25,21 +27,17 @@ public class UploadService {
         Session session = repository.login(new SimpleCredentials(userName,
                 password.toCharArray()));
 
-
         File file = (File) param.get("file");
+
         String fileName = file.getName();
         String path = file.getAbsolutePath();
 
 
-
         final String USER_PATH = UPLOAD_PATH + session.getUserID();
 
-        File upLoadFolder = new File(UPLOAD_PATH);
         File userFolder = new File(USER_PATH);
 
-        if (!upLoadFolder.exists()) {
-            upLoadFolder.mkdir();
-        } else if (!userFolder.exists()) {
+        if (!userFolder.exists()) {
             userFolder.mkdir();
         }
 
@@ -58,19 +56,30 @@ public class UploadService {
             }
 
 
-            if (!root.hasNode(fileName)) {
-                // XML 을 가져올 구조화되지 않은 노드를 만듭니다.
-                Node node = root.addNode(fileName, "nt:unstructured");
-                // 생성되 노드 아래에 파일 가져오기
+//            if (!root.hasNode(fileName)) {
+
+            Node docNode = root.addNode(session.getUserID(), "nt:file");
+
+            Node contentNode = docNode.addNode("jcr:content", "nt:resource");
+            Binary binary = session.getValueFactory().createBinary(fis);
+            contentNode.setProperty("jcr:data", binary);
+            contentNode.setProperty("jcr:mimeType", URLConnection.guessContentTypeFromName(file.getName()));
+            Calendar created = Calendar.getInstance();
+            contentNode.setProperty("jcr:lastModified", created);
 
 
-                session.importXML(node.getPath(), fis,
-                        ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-                versioningService.versioningBasic(root, session);
-                session.save();
+            System.out.println("content 노드");
+            System.out.println(JcrUtils.readFile(docNode));
 
-                System.out.println("done.");
-            }
+            System.out.println("doc 노드");
+            System.out.println( JcrUtils.readFile(contentNode));
+
+
+//                versioningService.versioningBasic(root, session);
+            session.save();
+
+            System.out.println("done.");
+//            }
             //저장소 내용 출력
             dump(root);
         } catch (IOException e) {
