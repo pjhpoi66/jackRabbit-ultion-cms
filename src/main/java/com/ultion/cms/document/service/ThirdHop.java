@@ -1,27 +1,35 @@
 package com.ultion.cms.document.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataRecord;
 import org.apache.jackrabbit.core.data.FileDataStore;
+import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.nio.file.AccessMode;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 @Service
+@Slf4j
 public class ThirdHop {
 
     @org.springframework.beans.factory.annotation.Value("${jcr.rep.home}")
     private String jcrHome;
+    @org.springframework.beans.factory.annotation.Value("${file.path}")
+    private String filePath;
 
-    public void three(Map<String, Object> param) throws Exception {
+    public void upload(Map<String, Object> param) throws Exception {
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin",
                 "admin".toCharArray()));
@@ -38,7 +46,6 @@ public class ThirdHop {
             // 가져오지 않았을경우 XML파일을 가져온다
             if (!root.hasNode(fileName)) {
                 System.out.print("Importing xml... ");
-                System.out.print("가져오는중");
                 // XML을 가져올 구조화되지 않은 노드를 만듭니다.
                 Node node = root.addNode(fileName, "nt:unstructured");
                 // 생성되 노드 아래에 파일 가져오기
@@ -46,8 +53,7 @@ public class ThirdHop {
                 session.importXML(node.getPath(), xml,
                         ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
 
-
-                File upLoadFolder = new File("upload/");
+                /*File upLoadFolder = new File("upload/");
                 File userFolder = new File("upload/" + session.getUserID());
                 if (!upLoadFolder.exists()) {
                     upLoadFolder.mkdir();
@@ -67,14 +73,20 @@ public class ThirdHop {
                 while ((data = xml.read(buffer)) != -1) {
                     fos.write(buffer, 0, data);
                     fos.flush();
-                }
+                }*/
+
+                LocalFileSystem lfs = new LocalFileSystem();
+                String uploadPath = "/cms/upload";
+                lfs.createFolder(uploadPath);
+                lfs.setRoot(file);
+                FileOutputStream fos = (FileOutputStream) lfs.getOutputStream(uploadPath);
+
                 xml = new FileInputStream(path);
                 FileDataStore fileDataStore = new FileDataStore();
                 fileDataStore.init(jcrHome);
                 fileDataStore.addRecord(xml);
 
                 Iterator<DataIdentifier> iterator = fileDataStore.getAllIdentifiers();
-
                 while (iterator.hasNext()) {
                     DataIdentifier dataIdentifier = iterator.next();
                     System.out.println("데스토어 IDS" + dataIdentifier);
@@ -82,15 +94,13 @@ public class ThirdHop {
                     System.out.println("레코드 레퍼런스 : " + dataRecord.getReference());
                 }
 
-                fos.close();
                 xml.close();
-
                 session.save();
                 System.out.println("done.");
             }
 
             //저장소 내용 출력
-            dump(root);
+            //dump(root);
         } finally {
             session.logout();
         }
@@ -144,4 +154,56 @@ public class ThirdHop {
         }
     }
 
+    public void uploadTest(MultipartHttpServletRequest request) throws Exception {
+
+        MultipartFile file = request.getFile("file");
+        InputStream is = null;
+        OutputStream os = null;
+
+        System.out.println("파일 사이즈:" +  file.getSize());
+
+        try {
+            File uploadDir = new File(filePath);
+            if (!uploadDir.exists()) uploadDir.mkdir();
+
+
+            String fileName = file.getOriginalFilename();
+            //For IE upload bug
+            fileName = fileName.substring(fileName.lastIndexOf("\\") + 1);
+            String extension = FilenameUtils.getExtension(fileName);
+            String physicalName = fileName;
+            String logicalName = FilenameUtils.getBaseName(fileName);
+            Path path = Paths.get(uploadDir + File.separator + physicalName);
+            int num = 1;
+
+            while (Files.exists(path)) {
+                fileName = file.getOriginalFilename();
+                //For IE upload bug
+                fileName = fileName.substring(fileName.lastIndexOf("\\") + 1);
+                fileName = fileName.substring(0, fileName.lastIndexOf(".")) + "_" + num + fileName.substring(fileName.lastIndexOf("."));
+                physicalName = fileName;
+                logicalName = FilenameUtils.getBaseName(fileName);
+                path = Paths.get(uploadDir + File.separator + physicalName);
+                num++;
+            }
+            is = file.getInputStream();
+
+            System.out.println(path);
+            Files.createDirectories(path);
+            System.out.println("4444444444444444");
+            System.out.println("가능?  "+ Files.isWritable(path));
+
+            os = Files.newOutputStream(path);
+            System.out.println("555555555555555");
+            IOUtils.copy(is, os);
+            System.out.println("66666666666666666666");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log.error(e.getMessage());
+        } finally {
+            IOUtils.closeQuietly(is);
+            IOUtils.closeQuietly(os);
+        }
+    }
 }

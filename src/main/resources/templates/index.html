@@ -38,7 +38,7 @@
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
     });
 
-    window.onload = function () {
+    const getNodeList = function () {
         const btnGetList = document.querySelector("#btnGetList");
         const nodeListDiv = document.querySelector("#nodeList");
 
@@ -48,7 +48,7 @@
                     console.log(response);
                     let nodeList = response.data.nodeList;
 
-                    nodeList.forEach(function(item, index){
+                    nodeList.forEach(function (item, index) {
                         let p = document.createElement("p");
                         let textNode = "노드이름:" + item.nodeName + "  노드경로:" + item.nodePath;
                         nodeListDiv.append(textNode);
@@ -58,7 +58,10 @@
                     console.log(error);
                 })
         });
+    }
 
+    window.onload = function () {
+        getNodeList();
     }
 
 </script>

@@ -3,6 +3,8 @@ package com.ultion.cms.document.service;
 import com.ultion.cms.jackRabbit.JackrabbitRepositoryConfigFactory;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.data.FileDataStore;
+import org.apache.jackrabbit.core.fs.FileSystem;
+import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,10 +26,15 @@ public class DocumentService {
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin",
                 "admin".toCharArray()));
-        System.out.println("콘픽파일넴" + jackrabbitRepositoryConfigFactory.getConfigFilename());
-        System.out.println("쩨시알홈" + jackrabbitRepositoryConfigFactory.getJcrHome());
-        System.out.println("프퍼티파일넴" + jackrabbitRepositoryConfigFactory.getPropertiesFilename());
-        System.out.println("222222222222222222222222222222222");
+        System.out.println("Config File Name : " + jackrabbitRepositoryConfigFactory.getConfigFilename());
+        System.out.println("Jcr Home : " + jackrabbitRepositoryConfigFactory.getJcrHome());
+        System.out.println("Property File Name : " + jackrabbitRepositoryConfigFactory.getPropertiesFilename());
+
+        Workspace ws = session.getWorkspace();
+        System.out.println("워크스페이스 : " + ws.getName());
+
+        LocalFileSystem localFileSystem = new LocalFileSystem();
+        System.out.println("파일시스템 패스 : " + localFileSystem.getPath());
 
         try {
             Node root = session.getRootNode();
@@ -50,9 +57,9 @@ public class DocumentService {
         String nodeName = node.getName();
         int nodeDepth = node.getDepth();
 
-        System.out.println("노드 경로: " + nodePath);
+       /* System.out.println("노드 경로: " + nodePath);
         System.out.println("노드 이름: " + nodeName);
-        System.out.println("노드 Depth: " + nodeDepth);
+        System.out.println("노드 Depth: " + nodeDepth);*/
 
         if (nodeName.equals("jcr:system")) {
             return;
@@ -67,7 +74,7 @@ public class DocumentService {
 
 
         // 속성출력
-        PropertyIterator properties = node.getProperties();
+        /*PropertyIterator properties = node.getProperties();
         while (properties.hasNext()) {
             Property property = properties.nextProperty();
             if (property.getDefinition().isMultiple()) {
@@ -84,7 +91,7 @@ public class DocumentService {
                 System.out.println(property.getPath() + " = "
                         + property.getString());
             }
-        }
+        }*/
 
         // 모든 자식노드를 재귀적으로 출력
         NodeIterator nodes = node.getNodes();

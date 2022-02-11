@@ -3,10 +3,8 @@ package com.ultion.cms.document.controller;
 import com.ultion.cms.document.service.DocumentService;
 import com.ultion.cms.document.service.ThirdHop;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
@@ -33,7 +31,18 @@ public class DocumentController {
     public ModelAndView fileUpload(@RequestParam("file") File file) throws Exception {
         Map<String, Object> param = new HashMap<>();
         param.put("file", file);
-        thirdHop.three(param);
+        thirdHop.upload(param);
+        return new ModelAndView("index");
+    }
+
+    @GetMapping("/tt")
+    public ModelAndView tt() {
+        return new ModelAndView("fileUpload");
+    }
+
+    @PostMapping("/uploadTest")
+    public ModelAndView fileUpload(MultipartHttpServletRequest request) throws Exception {
+        thirdHop.uploadTest(request);
         return new ModelAndView("index");
     }
 
