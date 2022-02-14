@@ -14,15 +14,20 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
 import java.io.*;
-import java.nio.file.AccessMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
 public class ThirdHop {
+
+    @org.springframework.beans.factory.annotation.Value("${upload.path}")
+    private String uploadPath;
 
     @org.springframework.beans.factory.annotation.Value("${jcr.rep.home}")
     private String jcrHome;
@@ -50,8 +55,16 @@ public class ThirdHop {
                 Node node = root.addNode(fileName, "nt:unstructured");
                 // 생성되 노드 아래에 파일 가져오기
 
+                Iterator<Node> nodes = root.getNodes();
+                while (nodes.hasNext()) {
+                    System.out.println(nodes.toString());
+
+                }
+
                 session.importXML(node.getPath(), xml,
                         ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
+
+
 
                 /*File upLoadFolder = new File("upload/");
                 File userFolder = new File("upload/" + session.getUserID());
@@ -154,6 +167,25 @@ public class ThirdHop {
         }
     }
 
+    public void uploadTest2(MultipartHttpServletRequest request) throws Exception {
+
+        MultipartFile file = request.getFile("file");
+        System.out.println("파일 사이즈:" +  file.getSize());
+
+        try {
+            File uploadDir = new File("uploadPath");
+            if (!uploadDir.exists()) uploadDir.mkdirs();
+            System.out.println("uploading:"+uploadPath+"/"+file.getOriginalFilename());
+            file.transferTo(new File(file.getOriginalFilename()));
+
+        } catch (IOException e) {
+            System.out.println("upload fail:" + file.getName());
+            e.printStackTrace();
+
+        }
+        System.out.println("upload success:"+uploadPath+"/" + file.getOriginalFilename());
+
+    }
     public void uploadTest(MultipartHttpServletRequest request) throws Exception {
 
         MultipartFile file = request.getFile("file");

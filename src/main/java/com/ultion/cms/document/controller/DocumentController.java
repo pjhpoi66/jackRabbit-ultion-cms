@@ -2,14 +2,17 @@ package com.ultion.cms.document.controller;
 
 import com.ultion.cms.document.service.DocumentService;
 import com.ultion.cms.document.service.ThirdHop;
+import com.ultion.cms.file.FileDto;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @Controller
 public class DocumentController {
@@ -42,6 +45,7 @@ public class DocumentController {
 
     @PostMapping("/uploadTest")
     public ModelAndView fileUpload(MultipartHttpServletRequest request) throws Exception {
+
         thirdHop.uploadTest(request);
         return new ModelAndView("index");
     }
