@@ -55,6 +55,7 @@ public class ThirdHop {
                 Node node = root.addNode(fileName, "nt:unstructured");
                 // 생성되 노드 아래에 파일 가져오기
 
+
                 Iterator<Node> nodes = root.getNodes();
                 while (nodes.hasNext()) {
                     System.out.println(nodes.toString());
@@ -236,6 +237,7 @@ public class ThirdHop {
         } finally {
             IOUtils.closeQuietly(is);
             IOUtils.closeQuietly(os);
+
         }
     }
 }

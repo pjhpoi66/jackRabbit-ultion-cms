@@ -1,4 +1,3 @@
-
 <!--
 
            Licensed to the Apache Software Foundation (ASF) under one or more
@@ -16,12 +15,12 @@
            See the License for the specific language governing permissions and
            limitations under the License.
         -->
-        <!--
-         Example Repository Configuration File
-             Used by
-             - org.apache.jackrabbit.core.config.RepositoryConfigTest.java
-             -
-        -->
+<!--
+ Example Repository Configuration File
+     Used by
+     - org.apache.jackrabbit.core.config.RepositoryConfigTest.java
+     -
+-->
 
 <Repository>
     <!--
@@ -39,7 +38,8 @@
                     security manager:
                     class: FQN of class implementing the JackrabbitSecurityManager interface
         -->
-        <SecurityManager class="org.apache.jackrabbit.core.security.simple.SimpleSecurityManager" workspaceName="security">
+        <SecurityManager class="org.apache.jackrabbit.core.security.simple.SimpleSecurityManager"
+                         workspaceName="security">
             <!--
                         workspace access:
                         class: FQN of class implementing the WorkspaceAccessManager interface
@@ -64,7 +64,7 @@
                           anonymous user name ('anonymous' is the default value)
 
             -->
-             <param name="anonymousId" value="anonymous"/>
+            <param name="anonymousId" value="anonymous"/>
             <!--
                           administrator user id (default value if param is missing is 'admin')
             -->
@@ -101,7 +101,8 @@
         -->
         <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
             <param name="path" value="${wsp.home}/index"/>
-            <param name="textFilterClasses" value="org.apache.jackrabbit.extractor.PlainTextExtractor,org.apache.jackrabbit.extractor.MsWordTextExtractor,org.apache.jackrabbit.extractor.MsExcelTextExtractor,org.apache.jackrabbit.extractor.MsPowerPointTextExtractor,org.apache.jackrabbit.extractor.PdfTextExtractor,org.apache.jackrabbit.extractor.OpenOfficeTextExtractor,org.apache.jackrabbit.extractor.RTFTextExtractor,org.apache.jackrabbit.extractor.HTMLTextExtractor,org.apache.jackrabbit.extractor.XMLTextExtractor"/>
+            <param name="textFilterClasses"
+                   value="org.apache.jackrabbit.extractor.PlainTextExtractor,org.apache.jackrabbit.extractor.MsWordTextExtractor,org.apache.jackrabbit.extractor.MsExcelTextExtractor,org.apache.jackrabbit.extractor.MsPowerPointTextExtractor,org.apache.jackrabbit.extractor.PdfTextExtractor,org.apache.jackrabbit.extractor.OpenOfficeTextExtractor,org.apache.jackrabbit.extractor.RTFTextExtractor,org.apache.jackrabbit.extractor.HTMLTextExtractor,org.apache.jackrabbit.extractor.XMLTextExtractor"/>
             <param name="extractorPoolSize" value="2"/>
             <param name="supportHighlighting" value="true"/>
         </SearchIndex>
@@ -134,7 +135,8 @@
     -->
     <SearchIndex class="org.apache.jackrabbit.core.query.lucene.SearchIndex">
         <param name="path" value="${rep.home}/repository/index"/>
-        <param name="textFilterClasses" value="org.apache.jackrabbit.extractor.PlainTextExtractor,org.apache.jackrabbit.extractor.MsWordTextExtractor,org.apache.jackrabbit.extractor.MsExcelTextExtractor,org.apache.jackrabbit.extractor.MsPowerPointTextExtractor,org.apache.jackrabbit.extractor.PdfTextExtractor,org.apache.jackrabbit.extractor.OpenOfficeTextExtractor,org.apache.jackrabbit.extractor.RTFTextExtractor,org.apache.jackrabbit.extractor.HTMLTextExtractor,org.apache.jackrabbit.extractor.XMLTextExtractor"/>
+        <param name="textFilterClasses"
+               value="org.apache.jackrabbit.extractor.PlainTextExtractor,org.apache.jackrabbit.extractor.MsWordTextExtractor,org.apache.jackrabbit.extractor.MsExcelTextExtractor,org.apache.jackrabbit.extractor.MsPowerPointTextExtractor,org.apache.jackrabbit.extractor.PdfTextExtractor,org.apache.jackrabbit.extractor.OpenOfficeTextExtractor,org.apache.jackrabbit.extractor.RTFTextExtractor,org.apache.jackrabbit.extractor.HTMLTextExtractor,org.apache.jackrabbit.extractor.XMLTextExtractor"/>
         <param name="extractorPoolSize" value="2"/>
         <param name="supportHighlighting" value="true"/>
     </SearchIndex>
