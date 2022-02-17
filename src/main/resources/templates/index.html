@@ -1,69 +1,312 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>파일 테스트</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=3.0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>Content list - Ultion Heasdless CMS</title>
+    <meta name="apple-mobile-web-app-title" content="UCMS" />
+    <meta name="robots" content="index,nofollow" />
+    <meta name="description" content="Ultion Headless CMS" />
+    <meta property="og:title" content="UCMS" />
+    <meta property="og:url" content="http://www.ultion.co.kr/" />
+    <meta property="og:image" content="http://www.ultion.co.kr/" />
+    <meta property="og:description" content="http://www.ultion.co.kr/" />
+    <link rel="shortcut icon" href="/static/assets/images/favicon.png" />
+    <link rel="stylesheet" href="/static/assets/css/zTreeStyle.css" type="text/css" />
+    <link rel="stylesheet" href="/static/assets/css/style.css" />
+    <script src="/static/assets/js/lib/jquery.min.js"></script>
 </head>
+
 <body>
-<div class="container">
-    <form action="/upload" method="post" id="upload">
-        <div class="form-group row">
-            <label for="inputFile" class="col-sm-2 col-form-label"><strong>첨부 파일</strong></label>
-            <div class="col-sm-10">
-                <div class="custom-file" id="inputFile">
-                    <input name="file" type="file" class="custom-file-input" id="customFile">
-                    <label class="custom-file-label" for="customFile">파일을 선택해 주세요.</label>
+<div class="wrap">
+    <header class="header">
+        <h1 class="logo">
+            <a href="index.html"><span>Clinic</span></a>
+        </h1>
+        <div class="gnb-menu">
+            <div class="menu">
+                <a href="#">File</a>
+                <ul class="sub-menu">
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                </ul>
+            </div>
+            <div class="menu">
+                <a href="#">Edit</a>
+                <ul class="sub-menu">
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="header-member">
+            <div class="user">
+                <p>User ID</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="wrapper" id="content">
+        <section class="contents">
+            <div class="file-list">
+                <div class="file-tree">
+                    <div class="tree-wrap">
+                        <ul id="tree" class="ztree"></ul>
+                    </div>
                 </div>
+                <div class="file-path-box">
+                    <div class="table-wrap table-row">
+                        <table>
+                            <colgroup>
+                                <col style="width: 100px" />
+                                <col style="width: auto" />
+                            </colgroup>
+                            <tbody>
+                            <tr>
+                                <th scope="row" class="center">Path</th>
+                                <td>
+                                    <span class="file-path"> //path/root/폴더3/폴더3-1 </span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn-basic"><span>Upload</span></button>
+                </div>
+                <div class="table-wrap table-col">
+                    <table>
+                        <colgroup>
+                            <col style="width: auto" />
+                            <col style="width: 200px" />
+                            <col style="width: 200px" />
+                            <col style="width: 200px" />
+                            <col style="width: 300px" />
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <th scope="col">File Name</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Owner</th>
+                            <th scope="col">Last Update</th>
+                            <th scope="col"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <!-- 데이터가 없을때 -->
+                        <!-- <tr>
+                            <td colspan="5" class="no-data">
+                                <img src="../assets/images/no-data.png" alt="No data found" />
+                            </td>
+                        </tr> -->
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Edited</td>
+                            <td>krchoi</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Published</td>
+                            <td>admin</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Published</td>
+                            <td>admin</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Published</td>
+                            <td>admin</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Edited</td>
+                            <td>krchoi</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Edited</td>
+                            <td>krchoi</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Published</td>
+                            <td>admin</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Published</td>
+                            <td>admin</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Published</td>
+                            <td>admin</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="left">FileName0001</td>
+                            <td>Edited</td>
+                            <td>krchoi</td>
+                            <td>2022-01-25 14:15:52</td>
+                            <td>
+                                <button type="button" class="btn-basic"><span>Properties</span></button>
+                                <button type="button" class="btn-basic"><span>Download</span></button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination-wrap">
+                    <ul class="pagination">
+                        <li class="first">
+                            <a href="#">first</a>
+                        </li>
+                        <li class="pre">
+                            <a href="#">prev</a>
+                        </li>
+                        <li class="active">
+                            <a href="#">1</a>
+                        </li>
+                        <li>
+                            <a href="#">2</a>
+                        </li>
+                        <li>
+                            <a href="#">3</a>
+                        </li>
+                        <li>
+                            <a href="#">4</a>
+                        </li>
+                        <li>
+                            <a href="#">5</a>
+                        </li>
+                        <li>
+                            <a href="#">6</a>
+                        </li>
+                        <li>
+                            <a href="#">7</a>
+                        </li>
+                        <li>
+                            <a href="#">8</a>
+                        </li>
+                        <li>
+                            <a href="#">9</a>
+                        </li>
+                        <li>
+                            <a href="#">10</a>
+                        </li>
+                        <li class="next">
+                            <a href="#">next</a>
+                        </li>
+                        <li class="last">
+                            <a href="#">last</a>
+                        </li>
+                    </ul>
+                </div>
+
             </div>
-        </div>
-        <div class="row">
-            <div class="col-auto mr-auto"></div>
-            <div class="col-auto">
-                <input class="btn btn-primary" type="submit" role="button" value="업로드">
-            </div>
-        </div>
-    </form>
-    <div class="container">
-        <button type="button" class="btn btn-info" id="btnGetList">노드리스트 가져오기</button>
-        <div id="nodeList"></div>
+        </section>
     </div>
 </div>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-<script>
-    $(".custom-file-input").on("change", function() {
-        var fileName = $(this).val().split("\\").pop();
-        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
-    });
+<footer>
+    <div class="footer-inner">
+        <p class="copyright">© 2022 ULTION All rights reserves.</p>
+    </div>
+</footer>
 
-    const getNodeList = function () {
-        const btnGetList = document.querySelector("#btnGetList");
-        const nodeListDiv = document.querySelector("#nodeList");
-
-        btnGetList.addEventListener('click', evt => {
-            axios.get('/search', {})
-                .then(function (response) {
-                    console.log(response);
-                    let nodeList = response.data.nodeList;
-
-                    nodeList.forEach(function (item, index) {
-                        let p = document.createElement("p");
-                        let textNode = "노드이름:" + item.nodeName + "  노드경로:" + item.nodePath;
-                        nodeListDiv.append(textNode);
-                    });
-                })
-                .catch(function (error) {
-                    console.log(error);
-                })
-        });
-    }
-
-    window.onload = function () {
-        getNodeList();
-    }
-
-</script>
 </body>
+<!-- ztree 관련: https://lee-mandu.tistory.com/507, http://www.treejs.cn/v3/demo.php#_101 -->
+<script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
+<script type="text/javascript">
+    var zTreeObj,
+        setting = {
+            view: {
+                selectedMulti: false
+            },
+            callback: {
+                onClick: onClick
+            }
+        },
+        zTreeNodes = [
+            {
+                name: "ROOT",
+                open: true,
+                children: [{ name: "폴더 1" }, { name: "폴더 2" }, { name: "폴더 3", children: [{ name: "폴더 3-1" }, { name: "폴더 3-2" }] }, { name: "폴더 4", children: [{ name: "폴더 4-1" }, { name: "폴더 4-2" }] }]
+            }
+        ]
+    function onClick(event, treeId, treeNode, clickFlag) {
+        console.log(treeNode.name)
+    }
+
+    $(document).ready(function () {
+        zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes)
+    })
+</script>
 </html>
