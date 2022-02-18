@@ -67,6 +67,7 @@
                 <p>User ID</p>
                 <input type="text" id="inPutNodeName">
                 <button type="button" class="btn-basic" id="btnAddFolder"><span>AddFolder</span></button>
+                <button type="button" class="btn-basic" id="btnDeleteFolder"><span>DeleteFolder</span></button>
             </div>
         </div>
     </header>
@@ -135,96 +136,6 @@
                                 <img src="../assets/images/no-data.png" alt="No data found" />
                             </td>
                         </tr> -->
-                        <tr>
-                            <td class="left">FileName0001</td>
-                            <td>Edited</td>
-                            <td>krchoi</td>
-                            <td>2022-01-25 14:15:52</td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="left">FileName0001</td>
-                            <td>Published</td>
-                            <td>admin</td>
-                            <td>2022-01-25 14:15:52</td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="left">FileName0001</td>
-                            <td>Published</td>
-                            <td>admin</td>
-                            <td>2022-01-25 14:15:52</td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="left">FileName0001</td>
-                            <td>Published</td>
-                            <td>admin</td>
-                            <td>2022-01-25 14:15:52</td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="left">FileName0001</td>
-                            <td>Edited</td>
-                            <td>krchoi</td>
-                            <td>2022-01-25 14:15:52</td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="left">FileName0001</td>
-                            <td>Edited</td>
-                            <td>krchoi</td>
-                            <td>2022-01-25 14:15:52</td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="left">FileName0001</td>
-                            <td>Published</td>
-                            <td>admin</td>
-                            <td>2022-01-25 14:15:52</td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="left">FileName0001</td>
-                            <td>Published</td>
-                            <td>admin</td>
-                            <td>2022-01-25 14:15:52</td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="left">FileName0001</td>
-                            <td>Published</td>
-                            <td>admin</td>
-                            <td>2022-01-25 14:15:52</td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
                         <tr>
                             <td class="left">FileName0001</td>
                             <td>Edited</td>
@@ -307,6 +218,7 @@
     });
 
     var dep1List = [[${dep1NodeList}]];
+    console.log(dep1List);
 
     var zTreeObj,
         setting = {
@@ -332,6 +244,23 @@
         const strLength = nodePath.length;
         nodePath = nodePath.substr(1, strLength - 1);
         $('.file-path').text('//ROOT/' + nodePath);
+
+        $.ajax({
+            url: '/nodeList',
+            processData: false,
+            contentType: false,
+            type: 'POST',
+            success: function (result) {
+                dep1List = result.dep1NodeList;
+                zTreeNodes[0].children = dep1List;
+                console.log(dep1List);
+                zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
+            },
+            error: function (request, status, error) {
+
+                console.log(error);
+            }
+        });
 
     }
 
@@ -378,23 +307,6 @@
                 if (result.resultAdd) {
                     alert('폴더추가성공');
 
-                    $.ajax({
-                        url: '/nodeList',
-                        processData: false,
-                        contentType: false,
-                        type: 'POST',
-                        success: function (result) {
-                            dep1List = result.dep1NodeList;
-                            zTreeNodes[0].children = dep1List;
-                            console.log(dep1List);
-                        },
-                        error: function (request, status, error) {
-
-                            console.log(error);
-                        }
-                    });
-
-                    zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
                 }
                 else alert('폴더추가실패');
             },
@@ -403,5 +315,30 @@
             }
         });
     });
+
+    $('#btnDeleteFolder').on('click', function () {
+        const param = {};
+        let path = $('.file-path').text();
+
+        param.nodePath = path;
+
+        $.ajax({
+            url: '/folderDelete',
+            processData: false,
+            contentType: 'application/json',
+            dataType: 'JSON',
+            data: JSON.stringify(param),
+            type: 'POST',
+            success: function (result) {
+                if (result.delResult) alert('폴더삭제성공');
+                else alert('폴더삭제실패');
+            },
+            error: function (request, status, error) {
+                console.log(error);
+            }
+        });
+    });
+
+
 </script>
 </html>

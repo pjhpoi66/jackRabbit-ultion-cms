@@ -53,14 +53,6 @@ public class DocumentController {
         return result;
     }
 
-    @PostMapping("/uploadTest")
-    @ResponseBody
-    public Map<String, Object> uploadTest(MultipartHttpServletRequest request) throws Exception {
-
-        Map<String, Object> result = thirdHop.uploadTest2(request);
-        return result;
-    }
-
     @PostMapping("/folderAdd")
     @ResponseBody
     public Map<String, Object> folderAdd(@RequestBody Map<String, Object> param) throws Exception {
@@ -71,20 +63,12 @@ public class DocumentController {
         return result;
     }
 
-    @GetMapping("/getNodeList")
+    @PostMapping("/folderDelete")
     @ResponseBody
-    public Map<String, Object> search(@RequestBody Map<String, Object> param) throws Exception{
-        Map<String, Object> result = documentService.getNodeList(param);
-
-        return result;
-    }
-
-    @PostMapping("/delete")
-    @ResponseBody
-    public Map<String, Object> delete() throws Exception{
+    public Map<String, Object> delete(@RequestBody Map<String, Object> param) throws Exception{
         Map<String, Object> result = new HashMap<>();
-        boolean delResult = thirdHop.deleteNode();
-        result.put("result", delResult);
+        boolean delResult = documentService.deleteNode(param);
+        result.put("delResult", delResult);
         return result;
     }
 

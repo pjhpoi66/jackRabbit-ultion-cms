@@ -10,11 +10,14 @@ import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
+import javax.jcr.nodetype.NodeDefinition;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -45,7 +48,7 @@ public class DocumentService {
             while (dep1.hasNext()) {
                 Node dep1Node = dep1.nextNode();
                 NodeIterator dep2 = dep1Node.getNodes();
-
+                System.out.println("싸이즈즈즈" + dep2.getSize());
                 if (!dep1Node.getName().contains(":")) {
                     Map<String, Object> dep1NodeMap = new HashMap<>();
 
@@ -54,19 +57,32 @@ public class DocumentService {
                     } else {
                         dep2 = dep1Node.getNodes();
                         List<Map<String, Object>> dep2NodeList = new ArrayList<>();
+
                         while (dep2.hasNext()) {
                             Node dep2Node = dep2.nextNode();
+
                             Map<String, Object> dep2NodeMap = new HashMap<>();
                             dep2NodeMap.put("name", dep2Node.getName());
                             dep2NodeMap.put("nodePath", dep2Node.getPath());
                             dep2NodeMap.put("nodeIndex", dep2Node.getIndex());
-                            dep2NodeList.add(dep2NodeMap);
 
-                            NodeIterator s = dep2Node.getNodes();
-                            while (s.hasNext()) {
-                                System.out.println("루삥뽕");
-                                System.out.println(s.nextNode().getName());
+                            NodeIterator dep3 = dep2Node.getNodes();
+
+                            if (dep3.getSize() < 1)
+                                dep2NodeMap.put("hasChild", false);
+
+                            List<Map<String, Object>> fileList = new ArrayList<>();
+                            while (dep3.hasNext()){
+                                Map<String, Object> fileMap = new HashMap<>();
+                                Node dep3Node = dep3.nextNode();
+                                fileMap.put("path", dep3Node.getPath());
+                                fileList.add(fileMap);
                             }
+                            dep2NodeMap.put("fileList", fileList);
+
+                            if(dep2Node.isNodeType("nt:folder"))
+                                dep2NodeList.add(dep2NodeMap);
+
                         }
 
                         dep1NodeMap.put("children", dep2NodeList);
@@ -76,6 +92,9 @@ public class DocumentService {
                     dep1NodeMap.put("name", dep1Node.getName());
                     dep1NodeMap.put("nodePath", dep1Node.getPath());
                     dep1NodeMap.put("nodeIndex", dep1Node.getIndex());
+
+                    if(dep1Node.isNodeType("nt:folder"))
+                        dep1NodeList.add(dep1NodeMap);
 
                     dep1NodeList.add(dep1NodeMap);
                 }
@@ -108,9 +127,16 @@ public class DocumentService {
         nodeType = (nodeType.equals("folder")) ? "nt:folder" : "nt:file";
         try {
             Node root = session.getRootNode();
-            if ("nt:folder".equals(nodeType)) {
-                root.addNode(nodePath + "/" + nodeName, nodeType);
+            if(nodePath.equals("")){
+                if ("nt:folder".equals(nodeType)) {
+                    root.addNode(nodeName, nodeType);
+                }
+            } else {
+                if ("nt:folder".equals(nodeType)) {
+                    root.addNode(nodePath + "/" + nodeName, nodeType);
+                }
             }
+
 
             isSuccess = true;
             session.save();
@@ -151,11 +177,7 @@ public class DocumentService {
                 resNode.setProperty("jcr:mimeType", "file");
                 resNode.setProperty("jcr:encoding", "utf-8");
                 resNode.setProperty("jcr:data", file.getInputStream());
-                resNode.setProperty("jcr:name", file.getOriginalFilename());
-                resNode.setProperty("path", fileNode.getPath());
-                resNode.setProperty("nodePath", resNode.getPath());
-                resNode.setProperty("index", resNode.getIndex());
-                System.out.println("파일노드 인덱스!!" + fileNode.getProperty("index").getString());
+
                 file.transferTo(temp);
 
                 //데이터스토어 레코드추가
@@ -249,7 +271,7 @@ public class DocumentService {
     }
 
     //루트 하위노드 삭제
-    public boolean deleteNode() {
+    public boolean deleteNode(Map<String, Object> param) {
         boolean isSuccess = false;
 
         try {
@@ -268,31 +290,6 @@ public class DocumentService {
         }
 
         return isSuccess;
-    }
-
-    public Map<String, Object> download() {
-        Map<String, Object> result = new HashMap<>();
-
-        try {
-            Repository repository = JcrUtils.getRepository();
-            Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
-            Node root = session.getRootNode();
-            Node cms = root.getNode("cms");
-
-            DataStore ds = new FileDataStore();
-            ds.init("jackrabbit_1");
-
-            Iterator<DataIdentifier> iterator = ds.getAllIdentifiers();
-            while (iterator.hasNext()) {
-                DataIdentifier did = iterator.next();
-
-            }
-
-        } catch (Exception e) {
-            log.debug(e.getMessage());
-        }
-
-        return result;
     }
 
     /**
