@@ -14,10 +14,9 @@ import java.util.Properties;
 
 public class JackrabbitRepositoryConfigFactory {
 
-    @Value("${jcr.rep.home}")
-    private static final String JCR_REP_HOME = "jcr.rep.home";
+    private final String JCR_REP_HOME = "jcr.rep.home";
 
-    private String jcrHome;
+    private String jcrHome = "jackrabbit_1";
 
     private String configFilename = "repository.xml";
 

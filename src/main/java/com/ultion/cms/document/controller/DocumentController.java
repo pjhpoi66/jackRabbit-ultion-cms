@@ -2,40 +2,38 @@ package com.ultion.cms.document.controller;
 
 import com.ultion.cms.document.service.DocumentService;
 import com.ultion.cms.document.service.ThirdHop;
-import com.ultion.cms.file.FileDto;
+import com.ultion.cms.document.service.UploadTestService;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @Controller
 public class DocumentController {
 
     final ThirdHop thirdHop;
     final DocumentService documentService;
+    final UploadTestService uploadTestService;
 
-    public DocumentController(ThirdHop thirdHop, DocumentService documentService) {
+    public DocumentController(ThirdHop thirdHop, DocumentService documentService, UploadTestService uploadTestService) {
         this.thirdHop = thirdHop;
         this.documentService = documentService;
+        this.uploadTestService = uploadTestService;
     }
 
     @GetMapping("/index")
-    public ModelAndView getDocument() {
-        return new ModelAndView("index");
+    public ModelAndView indexPage() throws Exception{
+        Map<String, Object> result = documentService.indexPageLoad();
+        return new ModelAndView("index", result);
     }
 
-    @PostMapping("/upload")
-    public ModelAndView fileUpload(@RequestParam("file") File file) throws Exception {
-        Map<String, Object> param = new HashMap<>();
-        param.put("file", file);
-        thirdHop.upload(param);
-        return new ModelAndView("index");
+    @PostMapping("/nodeList")
+    @ResponseBody
+    public Map<String, Object> getNodeList() throws Exception{
+        return documentService.indexPageLoad();
     }
 
     @GetMapping("/tt")
@@ -43,18 +41,57 @@ public class DocumentController {
         return new ModelAndView("fileUpload");
     }
 
-    @PostMapping("/uploadTest")
-    public ModelAndView fileUpload(MultipartHttpServletRequest request) throws Exception {
+    @PostMapping("/upload")
+    @ResponseBody
+    public Map<String, Object> fileUpload(@RequestParam("nodePath") String nodePath, MultipartHttpServletRequest request) throws Exception {
 
-        thirdHop.uploadTest(request);
-        return new ModelAndView("index");
+        System.out.println("노노패" + nodePath);
+        System.out.println("파일스" + request.getFiles("file"));
+        boolean resultAdd = documentService.upload(nodePath, request);
+        Map<String, Object> result = new HashMap<>();
+        result.put("resultAdd", resultAdd);
+        return result;
     }
 
-    @GetMapping("/search")
+    @PostMapping("/uploadTest")
     @ResponseBody
-    public Map<String, Object> search() throws Exception{
-        Map<String, Object> result = documentService.getNodeList();
+    public Map<String, Object> uploadTest(MultipartHttpServletRequest request) throws Exception {
 
+        Map<String, Object> result = thirdHop.uploadTest2(request);
+        return result;
+    }
+
+    @PostMapping("/folderAdd")
+    @ResponseBody
+    public Map<String, Object> folderAdd(@RequestBody Map<String, Object> param) throws Exception {
+        System.out.println(param);
+        boolean resultAdd = documentService.customNodeAdd(param);
+        Map<String, Object> result = new HashMap<>();
+        result.put("resultAdd", resultAdd);
+        return result;
+    }
+
+    @GetMapping("/getNodeList")
+    @ResponseBody
+    public Map<String, Object> search(@RequestBody Map<String, Object> param) throws Exception{
+        Map<String, Object> result = documentService.getNodeList(param);
+
+        return result;
+    }
+
+    @PostMapping("/delete")
+    @ResponseBody
+    public Map<String, Object> delete() throws Exception{
+        Map<String, Object> result = new HashMap<>();
+        boolean delResult = thirdHop.deleteNode();
+        result.put("result", delResult);
+        return result;
+    }
+
+    @PostMapping("/download")
+    @ResponseBody
+    public Map<String, Object> down() throws Exception{
+        Map<String, Object> result = new HashMap<>();
         return result;
     }
 

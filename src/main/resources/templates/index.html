@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -24,7 +24,7 @@
 <div class="wrap">
     <header class="header">
         <h1 class="logo">
-            <a href="index.html"><span>Clinic</span></a>
+            <a href="/index"><span>Clinic</span></a>
         </h1>
         <div class="gnb-menu">
             <div class="menu">
@@ -65,6 +65,8 @@
         <div class="header-member">
             <div class="user">
                 <p>User ID</p>
+                <input type="text" id="inPutNodeName">
+                <button type="button" class="btn-basic" id="btnAddFolder"><span>AddFolder</span></button>
             </div>
         </div>
     </header>
@@ -88,13 +90,25 @@
                             <tr>
                                 <th scope="row" class="center">Path</th>
                                 <td>
-                                    <span class="file-path"> //path/root/폴더3/폴더3-1 </span>
+                                    <span class="file-path">//ROOT</span>
                                 </td>
                             </tr>
                             </tbody>
                         </table>
                     </div>
-                    <button type="button" class="btn-basic"><span>Upload</span></button>
+                    <form action="/upload" method="post" id="uploadForm" enctype="multipart/form-data">
+                        <div class="form-group row">
+                            <label for="inputFile" class="col-sm-2 col-form-label"><strong>첨부 파일</strong></label>
+                            <div class="col-sm-10">
+                                <div class="custom-file" id="inputFile">
+                                    <input name="file" type="file" class="custom-file-input" id="customFile" multiple="multiple">
+                                    <input type="hidden" name="nodePath" id="nodePath">
+                                    <label class="custom-file-label" for="customFile">파일을 선택해 주세요.</label>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <button type="button" class="btn-basic" id="btnUpload"><span>Upload</span></button>
                 </div>
                 <div class="table-wrap table-col">
                     <table>
@@ -284,7 +298,16 @@
 </body>
 <!-- ztree 관련: https://lee-mandu.tistory.com/507, http://www.treejs.cn/v3/demo.php#_101 -->
 <script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
-<script type="text/javascript">
+<script th:inline="javascript">
+    $(".custom-file-input").on("change", function () {
+        var fileName = $(this).val().split("\\").pop();
+        $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
+        let filePath = $('.file-path').text();
+        $('#nodePath').val(filePath);
+    });
+
+    var dep1List = [[${dep1NodeList}]];
+
     var zTreeObj,
         setting = {
             view: {
@@ -297,16 +320,88 @@
         zTreeNodes = [
             {
                 name: "ROOT",
+                nodePath: "",
                 open: true,
-                children: [{ name: "폴더 1" }, { name: "폴더 2" }, { name: "폴더 3", children: [{ name: "폴더 3-1" }, { name: "폴더 3-2" }] }, { name: "폴더 4", children: [{ name: "폴더 4-1" }, { name: "폴더 4-2" }] }]
+                children: dep1List
+                /*children: [{ name: "폴더 1" }, { name: "폴더 2" }, { name: "폴더 3", children: [{ name: "폴더 3-1" }, { name: "폴더 3-2" }] }, { name: "폴더 4", children: [{ name: "폴더 4-1" }, { name: "폴더 4-2" }] }]*/
             }
         ]
-    function onClick(event, treeId, treeNode, clickFlag) {
-        console.log(treeNode.name)
+
+    function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
+        let nodePath = treeNode.nodePath;
+        const strLength = nodePath.length;
+        nodePath = nodePath.substr(1, strLength - 1);
+        $('.file-path').text('//ROOT/' + nodePath);
+
     }
 
     $(document).ready(function () {
-        zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes)
+        zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
     })
+
+    $('#btnUpload').on('click', function () {
+        const form = $('#uploadForm')[0];
+        const data = new FormData(form);
+
+        $.ajax({
+            url: '/upload',
+            processData: false,
+            contentType: false,
+            data: data,
+            type: 'POST',
+            success: function (result) {
+                alert('hola');
+            },
+            error: function (request, status, error) {
+
+                console.log(error);
+            }
+        });
+    });
+
+    $('#btnAddFolder').on('click', function () {
+        const param = {};
+        let path = $('.file-path').text();
+
+        param.nodePath = path;
+        param.nodeName = $('#inPutNodeName').val();
+        param.nodeType = "folder";
+
+        $.ajax({
+            url: '/folderAdd',
+            processData: false,
+            contentType: 'application/json',
+            dataType: 'JSON',
+            data: JSON.stringify(param),
+            type: 'POST',
+            success: function (result) {
+                if (result.resultAdd) {
+                    alert('폴더추가성공');
+
+                    $.ajax({
+                        url: '/nodeList',
+                        processData: false,
+                        contentType: false,
+                        type: 'POST',
+                        success: function (result) {
+                            dep1List = result.dep1NodeList;
+                            zTreeNodes[0].children = dep1List;
+                            console.log(dep1List);
+                        },
+                        error: function (request, status, error) {
+
+                            console.log(error);
+                        }
+                    });
+
+                    zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
+                }
+                else alert('폴더추가실패');
+            },
+            error: function (request, status, error) {
+                console.log(error);
+            }
+        });
+    });
 </script>
 </html>

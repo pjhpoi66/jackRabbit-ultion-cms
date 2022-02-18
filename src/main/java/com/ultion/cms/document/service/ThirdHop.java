@@ -1,26 +1,17 @@
 package com.ultion.cms.document.service;
 
+import com.ultion.cms.core.util.DateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.core.data.DataIdentifier;
-import org.apache.jackrabbit.core.data.DataRecord;
-import org.apache.jackrabbit.core.data.FileDataStore;
-import org.apache.jackrabbit.core.fs.local.LocalFileSystem;
+import org.apache.jackrabbit.core.data.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -28,137 +19,102 @@ public class ThirdHop {
 
     @org.springframework.beans.factory.annotation.Value("${upload.path}")
     private String uploadPath;
-
     @org.springframework.beans.factory.annotation.Value("${jcr.rep.home}")
     private String jcrHome;
     @org.springframework.beans.factory.annotation.Value("${file.path}")
     private String filePath;
 
-    public void upload(Map<String, Object> param) throws Exception {
+    private static List<Map<String, Object>> nodeList = new ArrayList<>();
+
+    public Map<String, Object> indexPageLoad() throws Exception{
+        Map<String, Object> result = new HashMap<>();
+
         Repository repository = JcrUtils.getRepository();
-        Session session = repository.login(new SimpleCredentials("admin",
-                "admin".toCharArray()));
-        File file = (File) param.get("file");
-        String fileName = file.getName();
-        System.out.println("FILE NAME : " + fileName);
-        String path = file.getAbsolutePath();
-        System.out.println("PATH : " + path);
-        FileInputStream xml = new FileInputStream(path);
+        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
 
         try {
             Node root = session.getRootNode();
 
-            // 가져오지 않았을경우 XML파일을 가져온다
-            if (!root.hasNode(fileName)) {
-                System.out.print("Importing xml... ");
-                // XML을 가져올 구조화되지 않은 노드를 만듭니다.
-                Node node = root.addNode(fileName, "nt:unstructured");
-                // 생성되 노드 아래에 파일 가져오기
-
-
-                Iterator<Node> nodes = root.getNodes();
-                while (nodes.hasNext()) {
-                    System.out.println(nodes.toString());
-
-                }
-
-                session.importXML(node.getPath(), xml,
-                        ImportUUIDBehavior.IMPORT_UUID_CREATE_NEW);
-
-
-
-                /*File upLoadFolder = new File("upload/");
-                File userFolder = new File("upload/" + session.getUserID());
-                if (!upLoadFolder.exists()) {
-                    upLoadFolder.mkdir();
-                    System.out.println("mkupdate");
-                }
-                if (!userFolder.exists()) {
-                    userFolder.mkdir();
-                    System.out.println("mkuser");
-
-                }
-
-                FileOutputStream fos = new FileOutputStream("upload/" + session.getUserID() + "/" + fileName);
-                xml = new FileInputStream(path);
-                int data = 0;
-                byte buffer[] = new byte[1024];
-
-                while ((data = xml.read(buffer)) != -1) {
-                    fos.write(buffer, 0, data);
-                    fos.flush();
-                }*/
-
-                LocalFileSystem lfs = new LocalFileSystem();
-                String uploadPath = "/cms/upload";
-                lfs.createFolder(uploadPath);
-                lfs.setRoot(file);
-                FileOutputStream fos = (FileOutputStream) lfs.getOutputStream(uploadPath);
-
-                xml = new FileInputStream(path);
-                FileDataStore fileDataStore = new FileDataStore();
-                fileDataStore.init(jcrHome);
-                fileDataStore.addRecord(xml);
-
-                Iterator<DataIdentifier> iterator = fileDataStore.getAllIdentifiers();
-                while (iterator.hasNext()) {
-                    DataIdentifier dataIdentifier = iterator.next();
-                    System.out.println("데스토어 IDS" + dataIdentifier);
-                    DataRecord dataRecord = fileDataStore.getRecordIfStored(dataIdentifier);
-                    System.out.println("레코드 레퍼런스 : " + dataRecord.getReference());
-                }
-
-                xml.close();
-                session.save();
-                System.out.println("done.");
-            }
-
             //저장소 내용 출력
-            //dump(root);
+            ThirdHop.dump(root);
         } finally {
             session.logout();
         }
+
+        return result;
+    }
+
+    public Map<String, Object> getNodeList() throws Exception {
+        Repository repository = JcrUtils.getRepository();
+
+        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
+
+        try {
+            Node root = session.getRootNode();
+
+            //저장소 내용 출력
+            ThirdHop.dump(root);
+        } finally {
+            session.logout();
+        }
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("nodeList", nodeList);
+
+        return resultMap;
     }
 
     /**
      * 주어진 노드의 내용을 재귀적으로 출력한다
      */
-    static List<String> fileNames = new ArrayList<>();
+    public static void dump(Node node) throws RepositoryException {
 
-    private static void dump(Node node) throws RepositoryException {
+        String nodePath = node.getPath();
+        String nodeName = node.getName();
+        int nodeDepth = node.getDepth();
+        System.out.println("노드 이름: " + nodeName);
+       /* System.out.println("노드 경로: " + nodePath);
 
-        // 노드경로 출력
-        System.out.println("노드 경로: " + node.getPath());
-        // Skip the virtual (and large!) jcr:system subtree
-        System.out.println("노드 이름: " + node.getName());
-        if (1 == node.getDepth()) {
-            fileNames.add(node.getName());
-        }
-        System.out.println("리스트" + fileNames);
-
-        System.out.println("노드 Depth: " + node.getDepth());
-        if (node.getName().equals("jcr:system")) {
+        System.out.println("노드 Depth: " + nodeDepth);*/
+        if (nodeName.equals("jcr:system")) {
             return;
         }
 
-        // 속성출력
-        PropertyIterator properties = node.getProperties();
-        while (properties.hasNext()) {
-            Property property = properties.nextProperty();
-            if (property.getDefinition().isMultiple()) {
-                // 다중 값 속성, 모든 값 출력
-                Value[] values = property.getValues();
-                for (Value value : values) {
-                    System.out.println("멀티");
-                    System.out.println(property.getPath() + " = "
-                            + value.getString());
+        if ("file".equals(nodeName)) {
+
+            PropertyIterator properties = node.getProperties();
+
+            int a = 0;
+            Map<String, Object> fileMap = new HashMap<>();
+            while (properties.hasNext()) {
+                Property property = properties.nextProperty();
+
+                if (a == 0) {
+                    fileMap = new HashMap<>();
                 }
-            } else {
-                // 단일 값 속성
-                System.out.println("싱글");
-                System.out.println(property.getPath() + " = "
-                        + property.getString());
+
+                String propertyName = property.getName();
+                if (propertyName.equals("fileName") || propertyName.equals("path") || propertyName.equals("index")) {
+                    if ("fileName".equals(propertyName)) {
+                        System.out.println("111111111111111111");
+                        fileMap.put("fileName", property.getValue().getString());
+                    } else if ("path".equals(propertyName)) {
+                        System.out.println("22222222222222222");
+                        fileMap.put("path", property.getValue().getString());
+                    } else if ("index".equals(propertyName)) {
+                        System.out.println("3333333333333333333");
+                        fileMap.put("index", property.getValue().getString());
+                    }
+
+                }
+                if (fileMap.containsKey("fileName") && fileMap.containsKey("path") && fileMap.containsKey("index")) {
+                    a++;
+                    nodeList.add(fileMap);
+                } else {
+                    a = 0;
+                }
+
             }
+            System.out.println(nodeList);
         }
 
         // 모든 자식노드를 재귀적으로 출력
@@ -168,76 +124,117 @@ public class ThirdHop {
         }
     }
 
-    public void uploadTest2(MultipartHttpServletRequest request) throws Exception {
+    public Map<String, Object> uploadTest2(MultipartHttpServletRequest request) throws Exception {
 
-        MultipartFile file = request.getFile("file");
-        System.out.println("파일 사이즈:" +  file.getSize());
+        List<MultipartFile> files = request.getFiles("file");
 
-        try {
-            File uploadDir = new File("uploadPath");
-            if (!uploadDir.exists()) uploadDir.mkdirs();
-            System.out.println("uploading:"+uploadPath+"/"+file.getOriginalFilename());
-            file.transferTo(new File(file.getOriginalFilename()));
-
-        } catch (IOException e) {
-            System.out.println("upload fail:" + file.getName());
-            e.printStackTrace();
-
-        }
-        System.out.println("upload success:"+uploadPath+"/" + file.getOriginalFilename());
-
-    }
-    public void uploadTest(MultipartHttpServletRequest request) throws Exception {
-
-        MultipartFile file = request.getFile("file");
-        InputStream is = null;
-        OutputStream os = null;
-
-        System.out.println("파일 사이즈:" +  file.getSize());
-
-        try {
-            File uploadDir = new File(filePath);
-            if (!uploadDir.exists()) uploadDir.mkdir();
-
-
+        for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
-            //For IE upload bug
-            fileName = fileName.substring(fileName.lastIndexOf("\\") + 1);
-            String extension = FilenameUtils.getExtension(fileName);
-            String physicalName = fileName;
-            String logicalName = FilenameUtils.getBaseName(fileName);
-            Path path = Paths.get(uploadDir + File.separator + physicalName);
-            int num = 1;
+            String fileExt = FilenameUtils.getExtension(fileName);
+            String fileBaseName = FilenameUtils.getBaseName(fileName);
 
-            while (Files.exists(path)) {
-                fileName = file.getOriginalFilename();
-                //For IE upload bug
-                fileName = fileName.substring(fileName.lastIndexOf("\\") + 1);
-                fileName = fileName.substring(0, fileName.lastIndexOf(".")) + "_" + num + fileName.substring(fileName.lastIndexOf("."));
-                physicalName = fileName;
-                logicalName = FilenameUtils.getBaseName(fileName);
-                path = Paths.get(uploadDir + File.separator + physicalName);
-                num++;
+            try {
+                //일반 파일 업로드
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) uploadDir.mkdirs();
+                System.out.println("uploading:" + uploadPath + File.separator + file.getOriginalFilename() + ".....");
+                File temp = new File(fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
+                file.transferTo(temp);
+
+                //데이터스토어 레코드추가
+                FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
+                DataStore dataStore = new FileDataStore();
+                dataStore.init(jcrHome);
+                dataStore.addRecord(is);
+
+                //노드 접근
+                Repository repository = JcrUtils.getRepository();
+                Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
+
+                Node root = session.getRootNode();
+                Node cms = root.addNode("cms", "nt:unstructured");
+                cms.setProperty("name", "upload");
+                cms.setProperty("message", "upload folder??");
+
+                long uploadNodeSize = cms.getNodes().getSize();
+                System.out.println("사이즈:" + uploadNodeSize);
+
+                Node upload = cms.addNode("upload", "nt:unstructured");
+                Node fileNode = upload.addNode("file");
+                fileNode.setProperty("fileName", fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
+                fileNode.setProperty("fileSize", file.getSize());
+                fileNode.setProperty("registerDate", DateUtil.getNowDateTime());
+                fileNode.setProperty("modifyDate", DateUtil.getNowDateTime());
+                fileNode.setProperty("extension", fileExt);
+                fileNode.setProperty("path", uploadPath);
+                fileNode.setProperty("nodePath", fileNode.getPath());
+                fileNode.setProperty("index", fileNode.getIndex());
+                fileNode.setProperty("cmsIndex", cms.getIndex());
+                System.out.println("파일노드 인덱스!!" + fileNode.getProperty("index").getString());
+                session.save();
+                dump(root);
+
+                session.logout();
+
+            } catch (IOException e) {
+                System.out.println("upload fail:" + file.getName());
+                e.printStackTrace();
+                log.debug(e.getMessage());
+
             }
-            is = file.getInputStream();
+            System.out.println("upload success:" + uploadPath + "/" + file.getOriginalFilename());
+        }
 
-            System.out.println(path);
-            Files.createDirectories(path);
-            System.out.println("4444444444444444");
-            System.out.println("가능?  "+ Files.isWritable(path));
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("nodeList", nodeList);
 
-            os = Files.newOutputStream(path);
-            System.out.println("555555555555555");
-            IOUtils.copy(is, os);
-            System.out.println("66666666666666666666");
+        return resultMap;
+    }
+
+    //루트 하위노드 삭제
+    public boolean deleteNode() {
+        boolean isSuccess = false;
+
+        try {
+            Repository repository = JcrUtils.getRepository();
+            Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
+
+            Node root = session.getRootNode();
+            Node cms = root.getNode("cms");
+            root.remove();
+            cms.remove();
+            session.save();
+            session.logout();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            log.error(e.getMessage());
-        } finally {
-            IOUtils.closeQuietly(is);
-            IOUtils.closeQuietly(os);
-
+            log.debug(e.getMessage());
         }
+
+        return isSuccess;
+    }
+
+    public Map<String, Object> download() {
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            Repository repository = JcrUtils.getRepository();
+            Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
+            Node root = session.getRootNode();
+            Node cms = root.getNode("cms");
+
+            DataStore ds = new FileDataStore();
+            ds.init("jackrabbit_1");
+
+            Iterator<DataIdentifier> iterator = ds.getAllIdentifiers();
+            while (iterator.hasNext()) {
+                DataIdentifier did = iterator.next();
+
+            }
+
+        } catch (Exception e) {
+            log.debug(e.getMessage());
+        }
+
+        return result;
     }
 }
