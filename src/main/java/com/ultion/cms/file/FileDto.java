@@ -15,6 +15,7 @@ public class FileDto {
     private String fileName;
     private String path;
     private String contentType;
+    private String index;
 
 
 }

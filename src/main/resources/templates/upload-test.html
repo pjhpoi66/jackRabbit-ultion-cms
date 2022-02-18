@@ -14,24 +14,37 @@
     <input type="submit" value="가즈아">
 </form>
 
-<h1>upload-test3</h1>
-<form method="post" action="/upload-test3" enctype="multipart/form-data">
-    <input type="file" name="uploadFile" multiple="multiple">
-    <input type="submit" value="가즈아">
+<h1>upload-test3</h1> <!--  action="/upload-test3"-->
+<form method="post" enctype="multipart/form-data" id = 'form' onsubmit="return false;">
+    <input type="file" name="uploadFile" multiple="multiple" id="sendFiles">
+    <button type="button" onclick="send() " id="upload-btn">가즈아</button>
     <button type="button" onclick="location.href='/delete'">Delete</button>
 </form>
-
-
-
 <h3>
     <ul th:each="dto:${dtos}">
-        <li>이름: <span th:text="${dto.fileName}"></span>
-
-            <a href="#" th:onclick="javascript:down([[${dto.fileName}]],[[${dto.path}]])"> 다운 </a>
+        <li>
+            <a href="#" th:onclick="javascript:down([[${dto.fileName}]],[[${dto.path}]])">
+                <font color="gray">
+                    <span th:text="${dto.fileName}"></span>
+                </font>
+            </a>
         </li>
     </ul>
 </h3>
 
+<script>
+    function send() {
+        if (document.getElementById("sendFiles").files.length === 0) {
+            alert("0개의 파일로는 가즈아가 불가능합니다");
+            // location.href = "upload-test";
+        }else {
+            let form = document.getElementById('form');
+            form.action = "/upload-test3";
+            form.submit();
+        }
+    }
+
+</script>
 <script>
     function down(name, path) {
         let form = document.createElement('form');
@@ -47,8 +60,14 @@
         filePath.setAttribute('name', 'path');
         filePath.setAttribute('value', path);
 
+        /*   let fileIndex = document.createElement('input');
+           fileIndex.setAttribute('type','hidden');
+           fileIndex.setAttribute('name','index');
+           fileIndex.setAttribute('value', index);
+   */
         form.appendChild(fileName);
         form.appendChild(filePath)
+        // form.appendChild(fileIndex);
         document.body.appendChild(form);
 
         form.submit();

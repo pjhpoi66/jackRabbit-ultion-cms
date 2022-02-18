@@ -31,9 +31,13 @@ public class FileService {
                 FileDto dto = new FileDto();
                 dto.setFileName(node.getName());
                 dto.setPath(node.getPath());
+                if (node.getIndex() > 1) {
+                    dto.setIndex("[" + node.getIndex() + "]");
+                }
+
                 fileDtos.add(dto);
                 System.out.println("path:" + node.getPath() + "\tname:" + node.getName()
-                        + "\ttype:" + node.getPrimaryNodeType().getName());
+                        + "\tindex:"+node.getIndex());
             }
         }
         modelAndView.addObject("dtos", fileDtos);
@@ -43,7 +47,10 @@ public class FileService {
     public void upload(List<MultipartFile> files , Repository repository , Session session) throws Exception {
         Node root = session.getRootNode();
         Node folderNode = root.addNode("upload", "nt:folder");
-        if (!files.isEmpty()) {
+
+        if (files.size() == 1 && files.get(0).getSize() < 2) {
+            return;
+        } else {
             files.forEach(file -> {
                 try {
                     //upload 노드를 생성
@@ -52,6 +59,8 @@ public class FileService {
                     resNode.setProperty("jcr:mimeType", "file");
                     resNode.setProperty("jcr:encoding", "utf-8");
                     resNode.setProperty("jcr:data", file.getInputStream());
+                    System.out.println("fileNodePath:" + fileNode.getPath());
+                    System.out.println("resNodePath:" + resNode.getPath());
                     session.save();
                 } catch (RepositoryException | IOException e) {
                     e.printStackTrace();
@@ -64,12 +73,17 @@ public class FileService {
             System.out.println(node.getPrimaryNodeType());
         }
     }
+
     public void downLoad(Session session, FileDto fileDto) throws RepositoryException {
 
         Node root = session.getRootNode();
 
-        System.out.println("다운패스:" + fileDto.getPath());
-        Node upload = root.getNode("upload");
+        int cuttingInt =  fileDto.getPath().lastIndexOf(fileDto.getFileName());
+        System.out.println("다운로드 노드 폴더패스:" + fileDto.getPath().substring(0,cuttingInt).substring(1));
+        Node upload = root.getNode(fileDto.getPath().substring(0,cuttingInt).substring(1));
+
+
+
         Node downLoadNode = upload.getNode( fileDto.getFileName());
 
         File Folder = new File(fileDto.getPath());
@@ -82,6 +96,8 @@ public class FileService {
                 e.getStackTrace();
             }
         }
+
+
 
         try (OutputStream os = new FileOutputStream("C:\\Users\\user\\Downloads\\"+fileDto.getFileName());
              InputStream is = JcrUtils.readFile(downLoadNode);
@@ -102,6 +118,8 @@ public class FileService {
         while (nodeIterator.hasNext()) {
             Node node = nodeIterator.next();
             System.out.println("nodePath:" + node.getPath() + "\tnodeName:" + node.getName());
+
+
             if (node.getName().contains("upload")) {
                 node.remove();
                 session.save();
