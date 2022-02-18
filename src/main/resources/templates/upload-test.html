@@ -21,13 +21,39 @@
     <button type="button" onclick="location.href='/delete'">Delete</button>
 </form>
 
+
+
 <h3>
     <ul th:each="dto:${dtos}">
-        <font color="black">
-            <li>이름: <span th:text="${dto.fileName}"></span> 경로: <span th:text="${dto.path}"> </span></li>
-        </font>
+        <li>이름: <span th:text="${dto.fileName}"></span>
+
+            <a href="#" th:onclick="javascript:down([[${dto.fileName}]],[[${dto.path}]])"> 다운 </a>
+        </li>
     </ul>
 </h3>
+
+<script>
+    function down(name, path) {
+        let form = document.createElement('form');
+        form.setAttribute('method', 'post');
+        form.setAttribute('action', "/download");
+        document.charset = "utf-8";
+        let fileName = document.createElement('input');
+        fileName.setAttribute('type', 'hidden');
+        fileName.setAttribute('name', 'name');
+        fileName.setAttribute('value', name);
+        let filePath = document.createElement('input');
+        filePath.setAttribute('type', 'hidden');
+        filePath.setAttribute('name', 'path');
+        filePath.setAttribute('value', path);
+
+        form.appendChild(fileName);
+        form.appendChild(filePath)
+        document.body.appendChild(form);
+
+        form.submit();
+    }
+</script>
 
 </body>
 </html>

@@ -146,4 +146,6 @@
         <param name="minRecordLength" value="10"/>
     </DataStore>
 
+
+    <RepositoryLockMechanism class="org.apache.jackrabbit.core.util.CooperativeFileLock" />
 </Repository>
