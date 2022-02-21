@@ -64,20 +64,6 @@ public class DocumentService {
                             dep2NodeMap.put("nodePath", dep2Node.getPath());
                             dep2NodeMap.put("nodeIndex", dep2Node.getIndex());
 
-                            NodeIterator dep3 = dep2Node.getNodes();
-
-                            if (dep3.getSize() < 1)
-                                dep2NodeMap.put("hasChild", false);
-
-                            List<Map<String, Object>> fileList = new ArrayList<>();
-                            while (dep3.hasNext()){
-                                Map<String, Object> fileMap = new HashMap<>();
-                                Node dep3Node = dep3.nextNode();
-                                fileMap.put("path", dep3Node.getPath());
-                                fileList.add(fileMap);
-                            }
-                            dep2NodeMap.put("fileList", fileList);
-
                             if(dep2Node.isNodeType("nt:folder"))
                                 dep2NodeList.add(dep2NodeMap);
 
@@ -94,7 +80,7 @@ public class DocumentService {
                     if(dep1Node.isNodeType("nt:folder"))
                         dep1NodeList.add(dep1NodeMap);
 
-                    dep1NodeList.add(dep1NodeMap);
+
                 }
             }
 
@@ -166,8 +152,7 @@ public class DocumentService {
         if(depth > 2){
             String targetString = param.get("target").toString();
             String [] targetArr = targetString.split("/");
-            System.out.println(targetArr.length);
-            System.out.println(targetString);
+
             List<Map<String, Object>> fileList = new ArrayList<>();
             try {
                 Node root = session.getRootNode();
@@ -175,7 +160,6 @@ public class DocumentService {
                 Node targetNode2 = targetNode.getNode(targetArr[1]);
 
                 NodeIterator fileNodes = targetNode2.getNodes();
-
                 while (fileNodes.hasNext()) {
 
                     Node fileNode = fileNodes.nextNode();
@@ -190,7 +174,6 @@ public class DocumentService {
             } finally {
                 session.logout();
             }
-            System.out.println("222222222222222222222");
             System.out.println(fileList);
 
             resultMap.put("fileList", fileList);
@@ -208,8 +191,6 @@ public class DocumentService {
         nodePath = nodePath.replaceAll("//ROOT/", "");
 
         System.out.println("노드패스 : " + nodePath);
-        JackrabbitRepositoryConfigFactory config = new JackrabbitRepositoryConfigFactory();
-        config.create();
 
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
@@ -222,13 +203,11 @@ public class DocumentService {
                 else root.addNode(nodePath + "/" + nodeName, nodeType);
             }
 
-
             isSuccess = true;
             session.save();
+            session.logout();
         } catch (Exception e) {
             log.debug(e.getMessage());
-        } finally {
-            session.logout();
         }
         return isSuccess;
     }

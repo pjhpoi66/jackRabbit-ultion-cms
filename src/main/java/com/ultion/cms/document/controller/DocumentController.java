@@ -85,6 +85,7 @@ public class DocumentController {
         System.out.println("downLoadPath:");
         Map<String, String> resultMap = new HashMap<>();
         resultMap.put("result", documentService.downLoad(session, map.get("nodePath")));
+        session.logout();
         return resultMap;
     }
 

@@ -269,34 +269,6 @@
         });
     });
 
-    /*$('.btnDownload').on('click', function () {
-        alert("다움");
-        const param = {};
-        let path = $(this).parent().siblings('.filePath').text();
-
-        param.nodePath = path;
-        param.nodeName = $('#inPutNodeName').val();
-         param.nodeType = "folder";
-
-        $.ajax({
-            url: '/download',
-            processData: false,
-            contentType: 'application/json',
-            dataType: 'JSON',
-            data: JSON.stringify(param),
-            type: 'POST',
-            success: function (result) {
-                if (result.result ==='success') {
-                    alert('폴더추가성공');
-                }
-                else alert('폴더추가실패');
-            },
-            error: function (request, status, error) {
-                console.log(error);
-            }
-        });
-    });*/
-
     function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
         let nodePath = treeNode.nodePath;
 
@@ -304,13 +276,15 @@
         nodePath = nodePath.substr(1, strLength - 1);
         $('.file-path').text('//ROOT/' + nodePath);
 
+        console.log("유유");
+        console.log(dep1List);
 
         const param = {};
         param.target = nodePath;
         nodePath = nodePath.split("/");
         let nodePathLen = nodePath.length;
 
-        if("" === nodePath) param.depth = 1;
+        if(1 === nodePathLen) param.depth = 1;
         else param.depth = 3;
 
         $.ajax({
@@ -347,7 +321,7 @@
                         let filePath = item.filePath;
                         let fileDepth = item.fileDepth;
 
-                        let htmlString = '<tr></tr><td class="left filePath">' + filePath + '</td>';
+                        let htmlString = '<tr><td class="left filePath">' + filePath + '</td>';
                         htmlString += '<td>Edited</td>';
                         htmlString += '<td>jh.park</td>';
                         htmlString += '<td>1234-01-25 11:15:52</td>';
