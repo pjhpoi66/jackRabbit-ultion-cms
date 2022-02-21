@@ -1,19 +1,25 @@
 package com.ultion.cms.document.service;
 
 import com.ultion.cms.core.util.DateUtil;
+import com.ultion.cms.jackRabbit.JackrabbitRepositoryConfigFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.core.config.RepositoryConfig;
+import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDefinitionImpl;
+import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import javax.jcr.nodetype.NodeDefinition;
+import java.io.*;
 import java.util.*;
 
 @Service
@@ -102,6 +108,55 @@ public class DocumentService {
         return result;
     }
 
+    public String downLoad(Session session, String filePath) throws RepositoryException {
+
+        Node root = session.getRootNode();
+
+        /*int cuttingInt =  fileDto.getPath().lastIndexOf(fileDto.getFileName());
+        System.out.println("다운로드 노드 폴더패스:" + fileDto.getPath().substring(0,cuttingInt).substring(1));
+        Node upload = root.getNode(fileDto.getPath().substring(0,cuttingInt).substring(1));
+
+
+
+        Node downLoadNode = upload.getNode( fileDto.getFileName());*/
+
+        String[] paths = filePath.split("/");
+
+        Node uploadNode = root.getNode(paths[0]);
+        for (int i = 1; i < paths.length-2; i++) {
+            uploadNode = uploadNode.getNode(paths[i]);
+        }
+        Node fileNode = uploadNode.getNode(paths[paths.length - 1]);
+
+        File Folder = new File(filePath);
+
+    /*    if (!Folder.exists()) {
+            try{
+                Folder.mkdirs(); //폴더 생성합니다.
+            }
+            catch(Exception e){
+                e.getStackTrace();
+            }
+        }*/
+
+
+        try (OutputStream os = new FileOutputStream("C:\\Users\\user\\Downloads\\" + paths[paths.length - 1]);
+             InputStream is = JcrUtils.readFile(fileNode);
+        ) {
+
+            IOUtils.copy(is, os);
+
+            return "success";
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return "noSuchFile";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "amola";
+        }
+
+    }
+
     public Map<String, Object> getFileList(Map<String, Object> param) throws Exception {
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
@@ -135,6 +190,7 @@ public class DocumentService {
             } finally {
                 session.logout();
             }
+            System.out.println("222222222222222222222");
             System.out.println(fileList);
 
             resultMap.put("fileList", fileList);
@@ -152,6 +208,8 @@ public class DocumentService {
         nodePath = nodePath.replaceAll("//ROOT/", "");
 
         System.out.println("노드패스 : " + nodePath);
+        JackrabbitRepositoryConfigFactory config = new JackrabbitRepositoryConfigFactory();
+        config.create();
 
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
@@ -163,6 +221,7 @@ public class DocumentService {
                 if (nodePath.equals("")) root.addNode(nodeName, nodeType);
                 else root.addNode(nodePath + "/" + nodeName, nodeType);
             }
+
 
             isSuccess = true;
             session.save();

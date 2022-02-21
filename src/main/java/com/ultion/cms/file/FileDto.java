@@ -14,6 +14,8 @@ public class FileDto {
     private String uuid;
     private String fileName;
     private String contentType;
+    private String path;
+    private String index;
 
 
 }

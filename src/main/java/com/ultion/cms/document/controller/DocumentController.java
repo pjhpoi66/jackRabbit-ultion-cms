@@ -3,11 +3,16 @@ package com.ultion.cms.document.controller;
 import com.ultion.cms.document.service.DocumentService;
 import com.ultion.cms.document.service.ThirdHop;
 import com.ultion.cms.document.service.UploadTestService;
+import org.apache.jackrabbit.commons.JcrUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.jcr.Node;
+import javax.jcr.Repository;
+import javax.jcr.Session;
+import javax.jcr.SimpleCredentials;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -74,9 +79,13 @@ public class DocumentController {
 
     @PostMapping("/download")
     @ResponseBody
-    public Map<String, Object> down() throws Exception{
-        Map<String, Object> result = new HashMap<>();
-        return result;
+    public Map<String, String> down(@RequestBody Map<String,String>  map ) throws Exception{
+        Repository repository = JcrUtils.getRepository();
+        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
+        System.out.println("downLoadPath:");
+        Map<String, String> resultMap = new HashMap<>();
+        resultMap.put("result", documentService.downLoad(session, map.get("nodePath")));
+        return resultMap;
     }
 
 }
