@@ -210,6 +210,10 @@
 <!-- ztree 관련: https://lee-mandu.tistory.com/507, http://www.treejs.cn/v3/demo.php#_101 -->
 <script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
 <script th:inline="javascript">
+    $(document).ready(function () {
+        zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
+    })
+
     $(".custom-file-input").on("change", function () {
         var fileName = $(this).val().split("\\").pop();
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
@@ -237,6 +241,62 @@
                 /*children: [{ name: "폴더 1" }, { name: "폴더 2" }, { name: "폴더 3", children: [{ name: "폴더 3-1" }, { name: "폴더 3-2" }] }, { name: "폴더 4", children: [{ name: "폴더 4-1" }, { name: "폴더 4-2" }] }]*/
             }
         ]
+
+    $(document).on('click', '.btnDownload', function() {
+        alert("다움");
+        const param = {};
+        let path = $(this).parent().siblings('.filePath').text();
+
+        param.nodePath = path;
+        param.nodeName = $('#inPutNodeName').val();
+        param.nodeType = "folder";
+
+        $.ajax({
+            url: '/download',
+            processData: false,
+            contentType: 'application/json',
+            dataType: 'JSON',
+            data: JSON.stringify(param),
+            type: 'POST',
+            success: function (result) {
+                if (result.result ==='success') {
+                    alert('폴더추가성공');
+                }
+                else alert('폴더추가실패');
+            },
+            error: function (request, status, error) {
+                console.log(error);
+            }
+        });
+    });
+
+    /*$('.btnDownload').on('click', function () {
+        alert("다움");
+        const param = {};
+        let path = $(this).parent().siblings('.filePath').text();
+
+        param.nodePath = path;
+        param.nodeName = $('#inPutNodeName').val();
+         param.nodeType = "folder";
+
+        $.ajax({
+            url: '/download',
+            processData: false,
+            contentType: 'application/json',
+            dataType: 'JSON',
+            data: JSON.stringify(param),
+            type: 'POST',
+            success: function (result) {
+                if (result.result ==='success') {
+                    alert('폴더추가성공');
+                }
+                else alert('폴더추가실패');
+            },
+            error: function (request, status, error) {
+                console.log(error);
+            }
+        });
+    });*/
 
     function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
         let nodePath = treeNode.nodePath;
@@ -288,11 +348,11 @@
                         let filePath = item.filePath;
                         let fileDepth = item.fileDepth;
 
-                        let htmlString = '<tr></tr><td class="left filePath">' + filePath + '</td>';
+                        let htmlString = '<tr><td class="left filePath">' + filePath + '</td>';
                         htmlString += '<td>Edited</td>';
                         htmlString += '<td>jh.park</td>';
                         htmlString += '<td>1234-01-25 11:15:52</td>';
-                        htmlString += '<td>';
+                        htmlString += '<td class="fileDowns">';
                         htmlString += '<button type="button" class="btn-basic"><span>Properties</span></button>';
                         htmlString += '<button type="button" class="btn-basic btnDownload"><span>Download</span></button>';
                         htmlString += '</td></tr>';
@@ -308,42 +368,7 @@
 
     }
 
-
-    $('.btnDownload').off('click').on('click', function () {
-        alert("다움");
-        const param = {};
-        let path = $(this).parent().siblings('.filePath').text();
-
-        param.nodePath = path;
-       /* param.nodeName = $('#inPutNodeName').val();
-        param.nodeType = "folder";*/
-
-        $.ajax({
-            url: '/download',
-            processData: false,
-            contentType: 'application/json',
-            dataType: 'JSON',
-            data: JSON.stringify(param),
-            type: 'POST',
-            success: function (result) {
-                if (result.result ==='success') {
-                    alert('폴더추가성공');
-
-                }
-                else alert('폴더추가실패');
-            },
-            error: function (request, status, error) {
-                console.log(error);
-            }
-        });
-    });
-
-
-
-    $(document).ready(function () {
-        zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
-    })
-
+    //업로드
     $('#btnUpload').on('click', function () {
         const form = $('#uploadForm')[0];
         const data = new FormData(form);
@@ -364,6 +389,7 @@
         });
     });
 
+    //폴더추가
     $('#btnAddFolder').off('click').on('click', function () {
         const param = {};
         let path = $('.file-path').text();
@@ -391,30 +417,6 @@
             }
         });
     });
-
-    $('#btnDeleteFolder').on('click', function () {
-        const param = {};
-        let path = $('.file-path').text();
-
-        param.nodePath = path;
-
-        $.ajax({
-            url: '/folderDelete',
-            processData: false,
-            contentType: 'application/json',
-            dataType: 'JSON',
-            data: JSON.stringify(param),
-            type: 'POST',
-            success: function (result) {
-                if (result.delResult) alert('폴더삭제성공');
-                else alert('폴더삭제실패');
-            },
-            error: function (request, status, error) {
-                console.log(error);
-            }
-        });
-    });
-
 
 </script>
 </html>
