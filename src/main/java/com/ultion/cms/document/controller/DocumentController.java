@@ -47,8 +47,6 @@ public class DocumentController {
     @ResponseBody
     public Map<String, Object> fileUpload(@RequestParam("nodePath") String nodePath, MultipartHttpServletRequest request) throws Exception {
 
-        System.out.println("노노패" + nodePath);
-        System.out.println("파일스" + request.getFiles("file"));
         boolean resultAdd = documentService.upload(nodePath, request);
         Map<String, Object> result = new HashMap<>();
         result.put("resultAdd", resultAdd);
@@ -58,8 +56,8 @@ public class DocumentController {
     @PostMapping("/folderAdd")
     @ResponseBody
     public Map<String, Object> folderAdd(@RequestBody Map<String, Object> param) throws Exception {
-        System.out.println(param);
-        boolean resultAdd = documentService.customNodeAdd(param);
+
+        boolean resultAdd = documentService.folderNodeAdd(param);
         Map<String, Object> result = new HashMap<>();
         result.put("resultAdd", resultAdd);
         return result;

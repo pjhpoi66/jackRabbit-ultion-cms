@@ -1,23 +1,16 @@
 package com.ultion.cms.document.service;
 
 import com.ultion.cms.core.util.DateUtil;
-import com.ultion.cms.jackRabbit.JackrabbitRepositoryConfigFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
-import javax.jcr.nodetype.NodeDefinition;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -115,7 +108,7 @@ public class DocumentService {
         Map<String, Object> resultMap = new HashMap<>();
 
         int depth = (int) param.get("depth");
-        if(depth > 1){
+        if(depth > 2){
             String targetString = param.get("target").toString();
             String [] targetArr = targetString.split("/");
             System.out.println(targetArr.length);
@@ -142,7 +135,6 @@ public class DocumentService {
             } finally {
                 session.logout();
             }
-            System.out.println("222222222222222222222");
             System.out.println(fileList);
 
             resultMap.put("fileList", fileList);
@@ -151,7 +143,8 @@ public class DocumentService {
         return resultMap;
     }
 
-    public boolean customNodeAdd(Map<String, Object> param) throws Exception {
+
+    public boolean folderNodeAdd(Map<String, Object> param) throws Exception {
         boolean isSuccess = false;
         String nodeName = param.get("nodeName").toString();
         String nodeType = param.get("nodeType").toString();
@@ -159,8 +152,6 @@ public class DocumentService {
         nodePath = nodePath.replaceAll("//ROOT/", "");
 
         System.out.println("노드패스 : " + nodePath);
-        JackrabbitRepositoryConfigFactory config = new JackrabbitRepositoryConfigFactory();
-        config.create();
 
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
@@ -168,16 +159,10 @@ public class DocumentService {
         nodeType = (nodeType.equals("folder")) ? "nt:folder" : "nt:file";
         try {
             Node root = session.getRootNode();
-            if(nodePath.equals("")){
-                if ("nt:folder".equals(nodeType)) {
-                    root.addNode(nodeName, nodeType);
-                }
-            } else {
-                if ("nt:folder".equals(nodeType)) {
-                    root.addNode(nodePath + "/" + nodeName, nodeType);
-                }
+            if ("nt:folder".equals(nodeType)) {
+                if (nodePath.equals("")) root.addNode(nodeName, nodeType);
+                else root.addNode(nodePath + "/" + nodeName, nodeType);
             }
-
 
             isSuccess = true;
             session.save();

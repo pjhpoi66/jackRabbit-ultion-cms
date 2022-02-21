@@ -265,7 +265,9 @@
 
                 let fileList = [];
                 fileList = result.fileList;
-                let fileListLength = fileList.length;
+                if(fileList != null) {
+                    let fileListLength = fileList.length;
+                }
 
                 if(fileListLength < 1){
                     $('.file-list-body').children('tr').remove();
@@ -324,7 +326,7 @@
         });
     });
 
-    $('#btnAddFolder').on('click', function () {
+    $('#btnAddFolder').off('click').on('click', function () {
         const param = {};
         let path = $('.file-path').text();
 
