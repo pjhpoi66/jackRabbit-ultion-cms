@@ -1,26 +1,22 @@
 package com.ultion.cms.document.service;
 
 import com.ultion.cms.core.util.DateUtil;
-import com.ultion.cms.jackRabbit.JackrabbitRepositoryConfigFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.core.config.RepositoryConfig;
-import org.apache.jackrabbit.core.data.DataIdentifier;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDefinitionImpl;
-import org.apache.jackrabbit.spi.commons.nodetype.NodeDefinitionImpl;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
-import javax.jcr.nodetype.NodeDefinition;
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -79,8 +75,6 @@ public class DocumentService {
 
                     if(dep1Node.isNodeType("nt:folder"))
                         dep1NodeList.add(dep1NodeMap);
-
-
                 }
             }
 
@@ -113,17 +107,6 @@ public class DocumentService {
             uploadNode = uploadNode.getNode(paths[i]);
         }
         Node fileNode = uploadNode.getNode(paths[paths.length - 1]);
-
-        File Folder = new File(filePath);
-
-    /*    if (!Folder.exists()) {
-            try{
-                Folder.mkdirs(); //폴더 생성합니다.
-            }
-            catch(Exception e){
-                e.getStackTrace();
-            }
-        }*/
 
 
         try (OutputStream os = new FileOutputStream("C:\\Users\\user\\Downloads\\" + paths[paths.length - 1]);
@@ -320,13 +303,14 @@ public class DocumentService {
 
                 String propertyName = property.getName();
                 if (propertyName.equals("fileName") || propertyName.equals("path") || propertyName.equals("index")) {
-                    if ("fileName".equals(propertyName)) {
+                    fileMap.put(propertyName, property.getValue().getString());
+                  /*  if ("fileName".equals(propertyName)) {
                         fileMap.put("fileName", property.getValue().getString());
                     } else if ("path".equals(propertyName)) {
                         fileMap.put("path", property.getValue().getString());
                     } else if ("index".equals(propertyName)) {
                         fileMap.put("index", property.getValue().getString());
-                    }
+                    }*/
 
                 }
                 if (fileMap.containsKey("fileName") && fileMap.containsKey("path") && fileMap.containsKey("index")) {

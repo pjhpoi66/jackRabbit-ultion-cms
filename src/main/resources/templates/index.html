@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=3.0" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="format-detection" content="telephone=no" />
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=3.0"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="format-detection" content="telephone=no"/>
     <title>Content list - Ultion Heasdless CMS</title>
-    <meta name="apple-mobile-web-app-title" content="UCMS" />
-    <meta name="robots" content="index,nofollow" />
-    <meta name="description" content="Ultion Headless CMS" />
-    <meta property="og:title" content="UCMS" />
-    <meta property="og:url" content="http://www.ultion.co.kr/" />
-    <meta property="og:image" content="http://www.ultion.co.kr/" />
-    <meta property="og:description" content="http://www.ultion.co.kr/" />
-    <link rel="shortcut icon" href="/static/assets/images/favicon.png" />
-    <link rel="stylesheet" href="/static/assets/css/zTreeStyle.css" type="text/css" />
-    <link rel="stylesheet" href="/static/assets/css/style.css" />
+    <meta name="apple-mobile-web-app-title" content="UCMS"/>
+    <meta name="robots" content="index,nofollow"/>
+    <meta name="description" content="Ultion Headless CMS"/>
+    <meta property="og:title" content="UCMS"/>
+    <meta property="og:url" content="http://www.ultion.co.kr/"/>
+    <meta property="og:image" content="http://www.ultion.co.kr/"/>
+    <meta property="og:description" content="http://www.ultion.co.kr/"/>
+    <link rel="shortcut icon" href="/static/assets/images/favicon.png"/>
+    <link rel="stylesheet" href="/static/assets/css/zTreeStyle.css" type="text/css"/>
+    <link rel="stylesheet" href="/static/assets/css/style.css"/>
     <script src="/static/assets/js/lib/jquery.min.js"></script>
 </head>
 
@@ -84,8 +84,8 @@
                     <div class="table-wrap table-row">
                         <table>
                             <colgroup>
-                                <col style="width: 100px" />
-                                <col style="width: auto" />
+                                <col style="width: 100px"/>
+                                <col style="width: auto"/>
                             </colgroup>
                             <tbody>
                             <tr>
@@ -102,7 +102,8 @@
                             <label for="inputFile" class="col-sm-2 col-form-label"><strong>첨부 파일</strong></label>
                             <div class="col-sm-10">
                                 <div class="custom-file" id="inputFile">
-                                    <input name="file" type="file" class="custom-file-input" id="customFile" multiple="multiple">
+                                    <input name="file" type="file" class="custom-file-input" id="customFile"
+                                           multiple="multiple">
                                     <input type="hidden" name="nodePath" id="nodePath">
                                     <label class="custom-file-label" for="customFile">파일을 선택해 주세요.</label>
                                 </div>
@@ -114,11 +115,11 @@
                 <div class="table-wrap table-col">
                     <table>
                         <colgroup>
-                            <col style="width: auto" />
-                            <col style="width: 200px" />
-                            <col style="width: 200px" />
-                            <col style="width: 200px" />
-                            <col style="width: 300px" />
+                            <col style="width: auto"/>
+                            <col style="width: 200px"/>
+                            <col style="width: 200px"/>
+                            <col style="width: 200px"/>
+                            <col style="width: 300px"/>
                         </colgroup>
                         <thead>
                         <tr>
@@ -131,9 +132,9 @@
                         </thead>
                         <tbody class="file-list-body">
                         <!-- 데이터가 없을때 -->
-                         <tr>
+                        <tr>
                             <td colspan="5" class="no-data">
-                                <img src="/static/assets/images/no-data.png" alt="No data found" />
+                                <img src="/static/assets/images/no-data.png" alt="No data found"/>
                             </td>
                         </tr>
                         <!--<tr>
@@ -242,7 +243,7 @@
             }
         ]
 
-    $(document).on('click', '.btnDownload', function() {
+    $(document).on('click', '.btnDownload', function () {
         const param = {};
         let path = $(this).parent().siblings('.filePath').text();
 
@@ -258,10 +259,9 @@
             data: JSON.stringify(param),
             type: 'POST',
             success: function (result) {
-                if (result.result ==='success') {
+                if (result.result === 'success') {
                     alert('다운완료');
-                }
-                else alert('다운실패');
+                } else alert('다운실패');
             },
             error: function (request, status, error) {
                 console.log(error);
@@ -284,7 +284,7 @@
         nodePath = nodePath.split("/");
         let nodePathLen = nodePath.length;
 
-        if(1 === nodePathLen) param.depth = 1;
+        if (1 === nodePathLen) param.depth = 1;
         else param.depth = 3;
 
         $.ajax({
@@ -304,11 +304,11 @@
                 fileList = result.fileList;
                 console.log(fileList);
                 let fileListLength = 0;
-                if(fileList != null) {
-                    fileListLength  = fileList.length;
+                if (fileList != null) {
+                    fileListLength = fileList.length;
                 }
 
-                if(fileListLength < 1){
+                if (fileListLength < 1) {
                     $('.file-list-body').children('tr').remove();
                     let htmlString = '<tr><td colspan="5" class="no-data">';
                     htmlString += '<img src="/static/assets/images/no-data.png" alt="No data found" />';
@@ -382,8 +382,7 @@
                 if (result.resultAdd) {
                     alert('폴더추가성공');
 
-                }
-                else alert('폴더추가실패');
+                } else alert('폴더추가실패');
             },
             error: function (request, status, error) {
                 console.log(error);
