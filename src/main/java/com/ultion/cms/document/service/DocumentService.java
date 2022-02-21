@@ -48,7 +48,6 @@ public class DocumentService {
             while (dep1.hasNext()) {
                 Node dep1Node = dep1.nextNode();
                 NodeIterator dep2 = dep1Node.getNodes();
-                System.out.println("싸이즈즈즈" + dep2.getSize());
                 if (!dep1Node.getName().contains(":")) {
                     Map<String, Object> dep1NodeMap = new HashMap<>();
 
@@ -108,6 +107,48 @@ public class DocumentService {
         }
 
         return result;
+    }
+
+    public Map<String, Object> getFileList(Map<String, Object> param) throws Exception {
+        Repository repository = JcrUtils.getRepository();
+        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
+        Map<String, Object> resultMap = new HashMap<>();
+
+        int depth = (int) param.get("depth");
+        if(depth > 1){
+            String targetString = param.get("target").toString();
+            String [] targetArr = targetString.split("/");
+            System.out.println(targetArr.length);
+            System.out.println(targetString);
+            List<Map<String, Object>> fileList = new ArrayList<>();
+            try {
+                Node root = session.getRootNode();
+                Node targetNode = root.getNode(targetArr[0]);
+                Node targetNode2 = targetNode.getNode(targetArr[1]);
+
+                NodeIterator fileNodes = targetNode2.getNodes();
+
+                while (fileNodes.hasNext()) {
+
+                    Node fileNode = fileNodes.nextNode();
+                    if (fileNode.isNodeType("nt:file")) {
+                        Map<String, Object> fileMap = new HashMap<>();
+                        fileMap.put("filePath", fileNode.getPath());
+                        fileMap.put("fileDepth", fileNode.getDepth());
+                        fileList.add(fileMap);
+                    }
+                }
+
+            } finally {
+                session.logout();
+            }
+            System.out.println("222222222222222222222");
+            System.out.println(fileList);
+
+            resultMap.put("fileList", fileList);
+        }
+
+        return resultMap;
     }
 
     public boolean customNodeAdd(Map<String, Object> param) throws Exception {
@@ -203,72 +244,7 @@ public class DocumentService {
         return resultAdd;
     }
 
-    public Map<String, Object> uploadTest2(MultipartHttpServletRequest request) throws Exception {
 
-        List<MultipartFile> files = request.getFiles("file");
-
-        for (MultipartFile file : files) {
-            String fileName = file.getOriginalFilename();
-            String fileExt = FilenameUtils.getExtension(fileName);
-            String fileBaseName = FilenameUtils.getBaseName(fileName);
-
-            try {
-                //일반 파일 업로드
-                File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) uploadDir.mkdirs();
-                System.out.println("uploading:" + uploadPath + File.separator + file.getOriginalFilename() + ".....");
-                File temp = new File(fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
-                file.transferTo(temp);
-
-                //데이터스토어 레코드추가
-                FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
-                DataStore dataStore = new FileDataStore();
-                dataStore.init(jcrHome);
-                dataStore.addRecord(is);
-
-                //노드 접근
-                Repository repository = JcrUtils.getRepository();
-                Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
-
-                Node root = session.getRootNode();
-                Node cms = root.addNode("cms", "nt:unstructured");
-                cms.setProperty("name", "upload");
-                cms.setProperty("message", "upload folder??");
-
-                long uploadNodeSize = cms.getNodes().getSize();
-                System.out.println("사이즈:" + uploadNodeSize);
-
-                Node upload = cms.addNode("upload", "nt:unstructured");
-                Node fileNode = upload.addNode("file");
-                fileNode.setProperty("fileName", fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
-                fileNode.setProperty("fileSize", file.getSize());
-                fileNode.setProperty("registerDate", DateUtil.getNowDateTime());
-                fileNode.setProperty("modifyDate", DateUtil.getNowDateTime());
-                fileNode.setProperty("extension", fileExt);
-                fileNode.setProperty("path", uploadPath);
-                fileNode.setProperty("nodePath", fileNode.getPath());
-                fileNode.setProperty("index", fileNode.getIndex());
-                fileNode.setProperty("cmsIndex", cms.getIndex());
-                System.out.println("파일노드 인덱스!!" + fileNode.getProperty("index").getString());
-                session.save();
-                dump(root);
-
-                session.logout();
-
-            } catch (IOException e) {
-                System.out.println("upload fail:" + file.getName());
-                e.printStackTrace();
-                log.debug(e.getMessage());
-
-            }
-            System.out.println("upload success:" + uploadPath + "/" + file.getOriginalFilename());
-        }
-
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("nodeList", nodeList);
-
-        return resultMap;
-    }
 
     //루트 하위노드 삭제
     public boolean deleteNode(Map<String, Object> param) {
@@ -346,24 +322,6 @@ public class DocumentService {
         while (nodes.hasNext()) {
             dump(nodes.nextNode());
         }
-    }
-
-    public Map<String, Object> getNodeList(Map<String, Object> param) throws Exception {
-        Repository repository = JcrUtils.getRepository();
-        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
-
-        try {
-            Node root = session.getRootNode();
-
-            //저장소 내용 출력
-            dump(root);
-        } finally {
-            session.logout();
-        }
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("nodeList", nodeList);
-
-        return resultMap;
     }
 
 }

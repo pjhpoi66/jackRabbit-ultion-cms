@@ -129,14 +129,14 @@
                             <th scope="col"></th>
                         </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="file-list-body">
                         <!-- 데이터가 없을때 -->
-                        <!-- <tr>
+                         <tr>
                             <td colspan="5" class="no-data">
-                                <img src="../assets/images/no-data.png" alt="No data found" />
+                                <img src="/static/assets/images/no-data.png" alt="No data found" />
                             </td>
-                        </tr> -->
-                        <tr>
+                        </tr>
+                        <!--<tr>
                             <td class="left">FileName0001</td>
                             <td>Edited</td>
                             <td>krchoi</td>
@@ -145,7 +145,7 @@
                                 <button type="button" class="btn-basic"><span>Properties</span></button>
                                 <button type="button" class="btn-basic"><span>Download</span></button>
                             </td>
-                        </tr>
+                        </tr>-->
                         </tbody>
                     </table>
                 </div>
@@ -218,7 +218,6 @@
     });
 
     var dep1List = [[${dep1NodeList}]];
-    console.log(dep1List);
 
     var zTreeObj,
         setting = {
@@ -241,23 +240,60 @@
 
     function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
         let nodePath = treeNode.nodePath;
+
         const strLength = nodePath.length;
         nodePath = nodePath.substr(1, strLength - 1);
         $('.file-path').text('//ROOT/' + nodePath);
 
+        const param = {};
+        if("" === nodePath) param.depth = 1;
+        else param.depth = 2;
+
+        param.target = nodePath;
         $.ajax({
             url: '/nodeList',
             processData: false,
-            contentType: false,
+            contentType: 'application/json',
             type: 'POST',
+            dataType: 'JSON',
+            data: JSON.stringify(param),
             success: function (result) {
                 dep1List = result.dep1NodeList;
                 zTreeNodes[0].children = dep1List;
                 console.log(dep1List);
                 zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
+
+                let fileList = [];
+                fileList = result.fileList;
+                let fileListLength = fileList.length;
+
+                if(fileListLength < 1){
+                    $('.file-list-body').children('tr').remove();
+                    let htmlString = '<tr><td colspan="5" class="no-data">';
+                    htmlString += '<img src="/static/assets/images/no-data.png" alt="No data found" />';
+                    htmlString += '</td>';
+                    htmlString += '</tr>';
+                    $('.file-list-body').append(htmlString);
+                } else {
+                    $('.file-list-body').children('tr').remove();
+                    fileList.forEach(function (item, index) {
+                        let filePath = item.filePath;
+                        let fileDepth = item.fileDepth;
+
+                        let htmlString = '<tr></tr><td class="left file-path">' + filePath + '</td>';
+                        htmlString += '<td>Edited</td>';
+                        htmlString += '<td>jh.park</td>';
+                        htmlString += '<td>1234-01-25 11:15:52</td>';
+                        htmlString += '<td>';
+                        htmlString += '<button type="button" class="btn-basic"><span>Properties</span></button>';
+                        htmlString += '<button type="button" class="btn-basic"><span>Download</span></button>';
+                        htmlString += '</td></tr>';
+                        $('.file-list-body').append(htmlString);
+                    });
+                }
+
             },
             error: function (request, status, error) {
-
                 console.log(error);
             }
         });
