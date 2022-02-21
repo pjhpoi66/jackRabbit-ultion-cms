@@ -211,10 +211,6 @@
 <!-- ztree 관련: https://lee-mandu.tistory.com/507, http://www.treejs.cn/v3/demo.php#_101 -->
 <script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
 <script th:inline="javascript">
-    $(document).ready(function () {
-        zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
-    })
-
     $(".custom-file-input").on("change", function () {
         var fileName = $(this).val().split("\\").pop();
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
@@ -276,15 +272,20 @@
         nodePath = nodePath.substr(1, strLength - 1);
         $('.file-path').text('//ROOT/' + nodePath);
 
-        console.log("유유");
-        console.log(dep1List);
-
         const param = {};
+        console.log("노패 :" + nodePath);
         param.target = nodePath;
-        nodePath = nodePath.split("/");
-        let nodePathLen = nodePath.length;
+        let nodePathArr = nodePath.split("/");
+        console.log(nodePath);
+        let nodePathLen = nodePathArr.length;
+        console.log("길이 :" + nodePathLen);
 
-        if (1 === nodePathLen) param.depth = 1;
+        if (1 === nodePathLen && nodePath === '') {
+            param.depth = 1;
+        }
+        else if(1 === nodePathLen && nodePath !== '') {
+            param.depth = 2;
+        }
         else param.depth = 3;
 
         $.ajax({
@@ -297,8 +298,6 @@
             success: function (result) {
                 dep1List = result.dep1NodeList;
                 zTreeNodes[0].children = dep1List;
-                console.log(dep1List);
-                zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
 
                 let fileList = [];
                 fileList = result.fileList;
@@ -318,13 +317,15 @@
                 } else {
                     $('.file-list-body').children('tr').remove();
                     fileList.forEach(function (item, index) {
-                        let filePath = item.filePath;
-                        let fileDepth = item.fileDepth;
+                        let filePath = item.path;
+                        let fileName = item.name;
+                        let lastUpdate = item.lastUpdate;
 
-                        let htmlString = '<tr><td class="left filePath">' + filePath + '</td>';
+                        let htmlString = '<tr><td class="left fileName">' + fileName + '</td>';
+                        htmlString += '<td class="left filePath" style="display: none;">' + filePath + '</td>';
                         htmlString += '<td>Edited</td>';
-                        htmlString += '<td>jh.park</td>';
-                        htmlString += '<td>1234-01-25 11:15:52</td>';
+                        htmlString += '<td>ADMIN</td>';
+                        htmlString += '<td>' + lastUpdate + '</td>';
                         htmlString += '<td>';
                         htmlString += '<button type="button" class="btn-basic"><span>Properties</span></button>';
                         htmlString += '<button type="button" class="btn-basic btnDownload"><span>Download</span></button>';
@@ -338,8 +339,12 @@
                 console.log(error);
             }
         });
-
+        return dep1List;
     }
+
+    $(document).ready(function () {
+        zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
+    });
 
     //업로드
     $('#btnUpload').on('click', function () {
@@ -353,7 +358,14 @@
             data: data,
             type: 'POST',
             success: function (result) {
-                alert('hola');
+
+                if(result.resultAdd){
+                    alert('업로드성공');
+                    location.reload();
+                } else {
+                    alert('업로드실패');
+                }
+
             },
             error: function (request, status, error) {
 

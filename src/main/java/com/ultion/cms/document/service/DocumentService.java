@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.jcr.*;
 import javax.jcr.nodetype.NodeType;
 import java.io.*;
+import java.util.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -28,7 +29,6 @@ public class DocumentService {
     private String uploadPath;
     @org.springframework.beans.factory.annotation.Value("${jcr.rep.home}")
     private String jcrHome;
-
 
     private static List<Map<String, Object>> nodeList = new ArrayList<>();
 
@@ -63,7 +63,7 @@ public class DocumentService {
                             dep2NodeMap.put("nodePath", dep2Node.getPath());
                             dep2NodeMap.put("nodeIndex", dep2Node.getIndex());
 
-                            if(dep2Node.isNodeType("nt:folder"))
+                            if (dep2Node.isNodeType("nt:folder"))
                                 dep2NodeList.add(dep2NodeMap);
 
                         }
@@ -76,7 +76,7 @@ public class DocumentService {
                     dep1NodeMap.put("nodePath", dep1Node.getPath());
                     dep1NodeMap.put("nodeIndex", dep1Node.getIndex());
 
-                    if(dep1Node.isNodeType("nt:folder"))
+                    if (dep1Node.isNodeType("nt:folder"))
                         dep1NodeList.add(dep1NodeMap);
                 }
             }
@@ -98,7 +98,7 @@ public class DocumentService {
         String[] paths = dto.getPath().substring(1).split("/");
 
         Node uploadNode = root.getNode(paths[0]);
-        for (int i = 1; i < paths.length-1; i++) {
+        for (int i = 1; i < paths.length - 1; i++) {
             uploadNode = uploadNode.getNode(paths[i]);
         }
         Node fileNode = uploadNode.getNode(paths[paths.length - 1]);
@@ -127,35 +127,39 @@ public class DocumentService {
         Map<String, Object> resultMap = new HashMap<>();
 
         int depth = (int) param.get("depth");
-        if(depth > 2){
-            String targetString = param.get("target").toString();
-            String [] targetArr = targetString.split("/");
 
-            List<Map<String, Object>> fileList = new ArrayList<>();
-            try {
-                Node root = session.getRootNode();
-                Node targetNode = root.getNode(targetArr[0]);
-                Node targetNode2 = targetNode.getNode(targetArr[1]);
+        String targetString = param.get("target").toString();
+        String[] targetArr = targetString.split("/");
 
-                NodeIterator fileNodes = targetNode2.getNodes();
-                while (fileNodes.hasNext()) {
-
-                    Node fileNode = fileNodes.nextNode();
-                    if (fileNode.isNodeType("nt:file")) {
-                        Map<String, Object> fileMap = new HashMap<>();
-                        fileMap.put("filePath", fileNode.getPath());
-                        fileMap.put("fileDepth", fileNode.getDepth());
-                        fileList.add(fileMap);
-                    }
+        List<FileDto> fileList = new ArrayList<>();
+        try {
+            Node node = session.getRootNode();
+            if (1 < depth) {
+                for (int i = 0; i < depth - 1; i++) {
+                    node = node.getNode(targetArr[i]);
                 }
-
-            } finally {
-                session.logout();
             }
-            System.out.println(fileList);
 
-            resultMap.put("fileList", fileList);
+            NodeIterator fileNodes = node.getNodes();
+            while (fileNodes.hasNext()) {
+
+                Node fileNode = fileNodes.nextNode();
+                if (fileNode.isNodeType("nt:file") || fileNode.isNodeType("nt:folder")) {
+                    FileDto fileDto = new FileDto();
+                    fileDto.setName(fileNode.getName());
+                    fileDto.setPath(fileNode.getPath());
+
+                    fileList.add(fileDto);
+                }
+            }
+
+        } finally {
+            session.logout();
         }
+        System.out.println(fileList);
+
+        resultMap.put("fileList", fileList);
+
 
         return resultMap;
     }
@@ -167,8 +171,6 @@ public class DocumentService {
         String nodeType = param.get("nodeType").toString();
         String nodePath = param.get("nodePath").toString();
         nodePath = nodePath.replaceAll("//ROOT/", "");
-
-        System.out.println("노드패스 : " + nodePath);
 
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
@@ -193,7 +195,6 @@ public class DocumentService {
     public boolean upload(String nodePath, MultipartHttpServletRequest request) throws Exception {
         boolean resultAdd = false;
         nodePath = nodePath.replaceAll("//ROOT/", "");
-        System.out.println("노패: "+nodePath);
         List<MultipartFile> files = request.getFiles("file");
 
         for (MultipartFile file : files) {
@@ -222,6 +223,7 @@ public class DocumentService {
                 resNode.setProperty(Property.JCR_DATA, file.getInputStream());
 
                 file.transferTo(temp);
+
                 //데이터스토어 레코드추가
                 FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
                 DataStore dataStore = new FileDataStore();
@@ -236,8 +238,6 @@ public class DocumentService {
                 System.out.println("upload fail:" + file.getName());
                 e.printStackTrace();
                 log.debug(e.getMessage());
-                resultAdd = false;
-
             }
             System.out.println("upload success:" + uploadPath + "/" + file.getOriginalFilename());
         }
@@ -246,84 +246,28 @@ public class DocumentService {
     }
 
 
-
-    //루트 하위노드 삭제
+    //노드 삭제
     public boolean deleteNode(Map<String, Object> param) {
         boolean isSuccess = false;
-
+        String nodePath = param.get("nodePath").toString();
+        nodePath = nodePath.replaceAll("//ROOT/", "");
         try {
             Repository repository = JcrUtils.getRepository();
             Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
 
             Node root = session.getRootNode();
-            Node cms = root.getNode("cms");
-            root.remove();
-            cms.remove();
+            Node targetNode = root.getNode(nodePath);
+
+            targetNode.remove();
             session.save();
             session.logout();
 
+            isSuccess = true;
         } catch (Exception e) {
             log.debug(e.getMessage());
         }
 
         return isSuccess;
-    }
-
-    /**
-     * 주어진 노드의 내용을 재귀적으로 출력한다
-     */
-    public static void dump(Node node) throws RepositoryException {
-
-        String nodePath = node.getPath();
-        String nodeName = node.getName();
-        int nodeDepth = node.getDepth();
-        System.out.println("노드 이름: " + nodeName);
-
-        if (nodeName.equals("jcr:system")) {
-            return;
-        }
-
-        if ("file".equals(nodeName)) {
-
-            PropertyIterator properties = node.getProperties();
-
-            int a = 0;
-            Map<String, Object> fileMap = new HashMap<>();
-            while (properties.hasNext()) {
-                Property property = properties.nextProperty();
-
-                if (a == 0) {
-                    fileMap = new HashMap<>();
-                }
-
-                String propertyName = property.getName();
-                if (propertyName.equals("fileName") || propertyName.equals("path") || propertyName.equals("index")) {
-                    fileMap.put(propertyName, property.getValue().getString());
-                  /*  if ("fileName".equals(propertyName)) {
-                        fileMap.put("fileName", property.getValue().getString());
-                    } else if ("path".equals(propertyName)) {
-                        fileMap.put("path", property.getValue().getString());
-                    } else if ("index".equals(propertyName)) {
-                        fileMap.put("index", property.getValue().getString());
-                    }*/
-
-                }
-                if (fileMap.containsKey("fileName") && fileMap.containsKey("path") && fileMap.containsKey("index")) {
-                    a++;
-                    nodeList.add(fileMap);
-                } else {
-                    a = 0;
-                }
-
-            }
-            System.out.println(nodeList);
-        }
-
-        // 모든 자식노드를 재귀적으로 출력
-        NodeIterator nodes = node.getNodes();
-        while (nodes.hasNext()) {
-            dump(nodes.nextNode());
-        }
     }
 
 }
