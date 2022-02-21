@@ -245,11 +245,15 @@
         nodePath = nodePath.substr(1, strLength - 1);
         $('.file-path').text('//ROOT/' + nodePath);
 
-        const param = {};
-        if("" === nodePath) param.depth = 1;
-        else param.depth = 2;
 
+        const param = {};
         param.target = nodePath;
+        nodePath = nodePath.split("/");
+        let nodePathLen = nodePath.length;
+
+        if("" === nodePath) param.depth = 1;
+        else param.depth = 3;
+
         $.ajax({
             url: '/nodeList',
             processData: false,
@@ -265,8 +269,10 @@
 
                 let fileList = [];
                 fileList = result.fileList;
+                console.log(fileList);
+                let fileListLength = 0;
                 if(fileList != null) {
-                    let fileListLength = fileList.length;
+                    fileListLength  = fileList.length;
                 }
 
                 if(fileListLength < 1){
@@ -282,7 +288,7 @@
                         let filePath = item.filePath;
                         let fileDepth = item.fileDepth;
 
-                        let htmlString = '<tr></tr><td class="left file-path">' + filePath + '</td>';
+                        let htmlString = '<tr></tr><td class="left filePath">' + filePath + '</td>';
                         htmlString += '<td>Edited</td>';
                         htmlString += '<td>jh.park</td>';
                         htmlString += '<td>1234-01-25 11:15:52</td>';
