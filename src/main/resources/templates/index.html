@@ -243,7 +243,6 @@
         ]
 
     $(document).on('click', '.btnDownload', function() {
-        alert("다움");
         const param = {};
         let path = $(this).parent().siblings('.filePath').text();
 
@@ -260,9 +259,9 @@
             type: 'POST',
             success: function (result) {
                 if (result.result ==='success') {
-                    alert('폴더추가성공');
+                    alert('다운완료');
                 }
-                else alert('폴더추가실패');
+                else alert('다운실패');
             },
             error: function (request, status, error) {
                 console.log(error);
@@ -348,11 +347,11 @@
                         let filePath = item.filePath;
                         let fileDepth = item.fileDepth;
 
-                        let htmlString = '<tr><td class="left filePath">' + filePath + '</td>';
+                        let htmlString = '<tr></tr><td class="left filePath">' + filePath + '</td>';
                         htmlString += '<td>Edited</td>';
                         htmlString += '<td>jh.park</td>';
                         htmlString += '<td>1234-01-25 11:15:52</td>';
-                        htmlString += '<td class="fileDowns">';
+                        htmlString += '<td>';
                         htmlString += '<button type="button" class="btn-basic"><span>Properties</span></button>';
                         htmlString += '<button type="button" class="btn-basic btnDownload"><span>Download</span></button>';
                         htmlString += '</td></tr>';
@@ -417,6 +416,30 @@
             }
         });
     });
+
+    $('#btnDeleteFolder').on('click', function () {
+        const param = {};
+        let path = $('.file-path').text();
+
+        param.nodePath = path;
+
+        $.ajax({
+            url: '/folderDelete',
+            processData: false,
+            contentType: 'application/json',
+            dataType: 'JSON',
+            data: JSON.stringify(param),
+            type: 'POST',
+            success: function (result) {
+                if (result.delResult) alert('폴더삭제성공');
+                else alert('폴더삭제실패');
+            },
+            error: function (request, status, error) {
+                console.log(error);
+            }
+        });
+    });
+
 
 </script>
 </html>

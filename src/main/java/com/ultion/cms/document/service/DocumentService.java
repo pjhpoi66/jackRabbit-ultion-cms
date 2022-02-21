@@ -120,10 +120,10 @@ public class DocumentService {
 
         Node downLoadNode = upload.getNode( fileDto.getFileName());*/
 
-        String[] paths = filePath.split("/");
+        String[] paths = filePath.substring(1).split("/");
 
         Node uploadNode = root.getNode(paths[0]);
-        for (int i = 1; i < paths.length-2; i++) {
+        for (int i = 1; i < paths.length-1; i++) {
             uploadNode = uploadNode.getNode(paths[i]);
         }
         Node fileNode = uploadNode.getNode(paths[paths.length - 1]);
