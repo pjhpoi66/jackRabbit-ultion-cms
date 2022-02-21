@@ -2,13 +2,12 @@ package com.ultion.cms.file;
 
 import lombok.*;
 
-@AllArgsConstructor
 @NoArgsConstructor
 @Getter
+@AllArgsConstructor
 @Setter
 @Builder
 public class FileDto {
-
     private String uuid;
     private String name;
     private String contentType;
@@ -19,3 +18,7 @@ public class FileDto {
     private String lastUpdate;
 
 }
+
+
+
+

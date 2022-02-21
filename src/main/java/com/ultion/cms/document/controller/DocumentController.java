@@ -3,6 +3,7 @@ package com.ultion.cms.document.controller;
 import com.ultion.cms.document.service.DocumentService;
 import com.ultion.cms.document.service.ThirdHop;
 import com.ultion.cms.document.service.UploadTestService;
+import com.ultion.cms.file.FileDto;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -82,9 +83,13 @@ public class DocumentController {
     public Map<String, String> down(@RequestBody Map<String,String>  map ) throws Exception{
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
-        System.out.println("downLoadPath:");
         Map<String, String> resultMap = new HashMap<>();
-        resultMap.put("result", documentService.downLoad(session, map.get("nodePath")));
+        FileDto dto = FileDto.builder()
+                .name(map.get("nodeName"))
+                .path(map.get("nodePath"))
+                .build();
+
+        resultMap.put("result", documentService.downLoad(session, dto));
         session.logout();
         return resultMap;
     }

@@ -1,22 +1,24 @@
 package com.ultion.cms.document.service;
 
 import com.ultion.cms.core.util.DateUtil;
+import com.ultion.cms.file.FileDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
+import javax.jcr.nodetype.NodeType;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -26,6 +28,7 @@ public class DocumentService {
     private String uploadPath;
     @org.springframework.beans.factory.annotation.Value("${jcr.rep.home}")
     private String jcrHome;
+
 
     private static List<Map<String, Object>> nodeList = new ArrayList<>();
 
@@ -88,19 +91,11 @@ public class DocumentService {
         return result;
     }
 
-    public String downLoad(Session session, String filePath) throws RepositoryException {
+    public String downLoad(Session session, FileDto dto) throws RepositoryException {
 
         Node root = session.getRootNode();
 
-        /*int cuttingInt =  fileDto.getPath().lastIndexOf(fileDto.getFileName());
-        System.out.println("다운로드 노드 폴더패스:" + fileDto.getPath().substring(0,cuttingInt).substring(1));
-        Node upload = root.getNode(fileDto.getPath().substring(0,cuttingInt).substring(1));
-
-
-
-        Node downLoadNode = upload.getNode( fileDto.getFileName());*/
-
-        String[] paths = filePath.substring(1).split("/");
+        String[] paths = dto.getPath().substring(1).split("/");
 
         Node uploadNode = root.getNode(paths[0]);
         for (int i = 1; i < paths.length-1; i++) {
@@ -219,14 +214,14 @@ public class DocumentService {
 
                 Node root = session.getRootNode();
                 Node targetNode = root.getNode(nodePath);
-                Node fileNode = targetNode.addNode(file.getOriginalFilename(), "nt:file");
-                Node resNode = fileNode.addNode("jcr:content", "nt:resource");
-                resNode.setProperty("jcr:mimeType", "file");
-                resNode.setProperty("jcr:encoding", "utf-8");
-                resNode.setProperty("jcr:data", file.getInputStream());
+                Node fileNode = targetNode.addNode(file.getOriginalFilename(), NodeType.NT_FILE);
+                Node resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
+                resNode.setProperty(Property.JCR_MIMETYPE, NodeType.NT_FILE);
+                resNode.setProperty(Property.JCR_LAST_MODIFIED, Calendar.getInstance());
+                resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
+                resNode.setProperty(Property.JCR_DATA, file.getInputStream());
 
                 file.transferTo(temp);
-
                 //데이터스토어 레코드추가
                 FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
                 DataStore dataStore = new FileDataStore();
