@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.jcr.Node;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
@@ -40,7 +39,7 @@ public class DocumentController {
     @ResponseBody
     public Map<String, Object> getNodeList(@RequestBody Map<String, Object> param) throws Exception{
         Map<String, Object> resultMap = documentService.indexPageLoad();
-        resultMap.put("fileList", documentService.getFileList(param).get("fileList"));
+        resultMap.put("fileList", documentService.getNodeList(param).get("fileList"));
         return resultMap;
     }
 

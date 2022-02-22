@@ -177,21 +177,20 @@ public class DocumentService {
     public boolean folderNodeAdd(Map<String, Object> param) throws Exception {
         boolean isSuccess = false;
         String nodeName = param.get("nodeName").toString();
-        String nodeType = param.get("nodeType").toString();
+        String nodeType = "nt:folder";
         String nodePath = param.get("nodePath").toString();
         nodePath = nodePath.replaceAll("//ROOT/", "");
 
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
 
-        nodeType = (nodeType.equals("folder")) ? "nt:folder" : "nt:file";
         try {
             Node root = session.getRootNode();
-            if ("nt:folder".equals(nodeType)) {
-                Node addNode = root.addNode(nodePath + "/" + nodeName, nodeType);
-                if (nodePath.equals("")) {
-                    addNode = root.addNode(nodeName, nodeType);
-                }
+            System.out.println("노패 : " + nodePath);
+            if (nodePath.equals("")) {
+                root.addNode(nodeName, nodeType);
+            } else {
+                root.addNode(nodePath + "/" + nodeName, nodeType);
             }
 
             isSuccess = true;
