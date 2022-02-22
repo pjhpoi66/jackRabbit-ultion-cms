@@ -42,9 +42,25 @@ public class DocumentService {
             Node root = session.getRootNode();
             NodeIterator dep1 = root.getNodes();
             List<Map<String, Object>> dep1NodeList = new ArrayList<>();
+            List<FileDto> rootChildList = new ArrayList<>();
 
             while (dep1.hasNext()) {
                 Node dep1Node = dep1.nextNode();
+
+                /*System.out.println("1111111111111111");
+                System.out.println(dep1Node.isNodeType("nt:file"));
+                if(dep1Node.isNodeType("nt:file")){
+                    Date date = dep1Node.getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime();
+                    String lastUpdate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
+                    fileDto.setLastUpdate(lastUpdate);
+                }*/
+                if (!dep1Node.getName().contains(":")) {
+                    FileDto fileDto = new FileDto();
+                    fileDto.setName(dep1Node.getName());
+                    fileDto.setName(dep1Node.getPath());
+                    rootChildList.add(fileDto);
+                }
+
                 NodeIterator dep2 = dep1Node.getNodes();
                 if (!dep1Node.getName().contains(":")) {
                     Map<String, Object> dep1NodeMap = new HashMap<>();
@@ -61,7 +77,6 @@ public class DocumentService {
                             Map<String, Object> dep2NodeMap = new HashMap<>();
                             dep2NodeMap.put("name", dep2Node.getName());
                             dep2NodeMap.put("nodePath", dep2Node.getPath());
-                            dep2NodeMap.put("nodeIndex", dep2Node.getIndex());
 
                             if (dep2Node.isNodeType("nt:folder"))
                                 dep2NodeList.add(dep2NodeMap);
@@ -83,6 +98,7 @@ public class DocumentService {
 
             System.out.println(dep1NodeList);
             result.put("dep1NodeList", dep1NodeList);
+            result.put("rootChildList", rootChildList);
 
             session.save();
         } finally {
@@ -95,7 +111,7 @@ public class DocumentService {
     public String downLoad(Session session, List<FileDto> fileDtos) throws RepositoryException {
         Node root = session.getRootNode();
 
-        fileDtos.forEach(dto->{
+        fileDtos.forEach(dto -> {
             Node resourceNode = null;
             try {
                 resourceNode = findResourceNode(root, dto);
@@ -118,15 +134,16 @@ public class DocumentService {
 
     }
 
-    public Node findResourceNode(Node root , FileDto dto) throws RepositoryException {
+    public Node findResourceNode(Node root, FileDto dto) throws RepositoryException {
         String[] paths = dto.getPath().substring(1).split("/");
         Node findNode = root.getNode(paths[0]);
         for (int i = 1; i < paths.length - 1; i++) {
             findNode = findNode.getNode(paths[i]);
         }
-        return findNode.getNode(paths[paths.length-1]);
+        return findNode.getNode(paths[paths.length - 1]);
     }
-    public Node findFileNode(Node root , FileDto dto) throws RepositoryException {
+
+    public Node findFileNode(Node root, FileDto dto) throws RepositoryException {
         String[] paths = dto.getPath().substring(1).split("/");
         Node findNode = root.getNode(paths[0]);
         for (int i = 1; i < paths.length - 1; i++) {
@@ -136,7 +153,7 @@ public class DocumentService {
     }
 
     public String getNameByDto(FileDto dto) {
-        return dto.getPath().substring(dto.getPath().lastIndexOf("/")).replace("/","");
+        return dto.getPath().substring(dto.getPath().lastIndexOf("/")).replace("/", "");
     }
 
     public String getNameByPath(String path) {
@@ -171,7 +188,7 @@ public class DocumentService {
                     FileDto fileDto = new FileDto();
                     fileDto.setName(fileNode.getName());
                     fileDto.setPath(fileNode.getPath());
-                    if(fileNode.isNodeType(("nt:file"))){
+                    if (fileNode.isNodeType(("nt:file"))) {
                         Node res = fileNode.getNode(Property.JCR_CONTENT);
                         Date date = res.getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime();
                         String lastUpdate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
@@ -231,7 +248,7 @@ public class DocumentService {
     public boolean upload(String nodePath, MultipartHttpServletRequest request) throws Exception {
         boolean resultAdd = false;
         nodePath = nodePath.replaceAll("//ROOT/", "");
-        System.out.println("노패: "+nodePath);
+        System.out.println("노패: " + nodePath);
         List<MultipartFile> files = request.getFiles("file");
 
         for (MultipartFile file : files) {
@@ -240,10 +257,7 @@ public class DocumentService {
             String fileBaseName = FilenameUtils.getBaseName(fileName);
 
             try {
-                //일반 파일 업로드
-                File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) uploadDir.mkdirs();
-                System.out.println("uploading:" + uploadPath + File.separator + file.getOriginalFilename() + ".....");
+
                 File temp = new File(fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
 
                 //노드 접근
@@ -253,7 +267,7 @@ public class DocumentService {
                 Node root = session.getRootNode();
                 Node targetNode = root;
                 System.out.println(nodePath);
-                if (!nodePath.equals("")){
+                if (!nodePath.equals("")) {
                     targetNode = root.getNode(nodePath);
                 }
                 Node fileNode = targetNode.addNode(file.getOriginalFilename(), NodeType.NT_FILE);
@@ -265,8 +279,6 @@ public class DocumentService {
                 resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
                 resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
                 resNode.setProperty(Property.JCR_DATA, file.getInputStream());
-
-                file.transferTo(temp);
 
                 //데이터스토어 레코드추가
                 FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
@@ -314,7 +326,7 @@ public class DocumentService {
         return isSuccess;
     }
 
-    public void reNamingFile(Node node , String newName) throws RepositoryException {
+    public void reNamingFile(Node node, String newName) throws RepositoryException {
         node.getSession().move(node.getPath(), node.getParent().getPath() + "/" + newName);
     }
 

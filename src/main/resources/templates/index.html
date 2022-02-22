@@ -133,32 +133,39 @@
                         </tr>
                         </thead>
                         <tbody class="file-list-body">
+
                         <!-- 데이터가 없을때 -->
-                        <tr>
+                        <tr th:if="${rootChildList == null}">
                             <td colspan="5" class="no-data">
                                 <img src="/static/assets/images/no-data.png" alt="No data found"/>
                             </td>
                         </tr>
-                        <!--<tr>
-                            <td class="left">FileName0001</td>
+
+                        <tr th:each="file : ${rootChildList}">
+                            <td class="left chk-path">
+                                <input type="checkbox" class="chk-file" th:value="|${file.path}|">
+                            </td>
+                            <td class="left fileName" th:text="|${file.name}|"></td>
+                            <td class="left filePath" style="display: none;" th:text="|${file.path}|"></td>
                             <td>Edited</td>
                             <td>krchoi</td>
-                            <td>2022-01-25 14:15:52</td>
+                            <td th:text="|${file.lastUpdate}|"></td>
                             <td>
                                 <button type="button" class="btn-basic"><span>Properties</span></button>
                                 <button type="button" class="btn-basic"><span>Download</span></button>
                             </td>
-                        </tr>-->
+                        </tr>
+
                         </tbody>
                     </table>
                 </div>
-                <div class="pagination-wrap">
+                <!--<div class="pagination-wrap">
                     <ul class="pagination">
                         <li class="first">
-                            <a href="#">first</a>
+                            <a href="#">맨 앞</a>
                         </li>
                         <li class="pre">
-                            <a href="#">prev</a>
+                            <a href="#">이전</a>
                         </li>
                         <li class="active">
                             <a href="#">1</a>
@@ -190,13 +197,13 @@
                             <a href="#">10</a>
                         </li>
                         <li class="next">
-                            <a href="#">next</a>
+                            <a href="#">다음</a>
                         </li>
                         <li class="last">
-                            <a href="#">last</a>
+                            <a href="#">맨 뒤</a>
                         </li>
                     </ul>
-                </div>
+                </div>-->
 
             </div>
         </section>
@@ -339,7 +346,7 @@
                         htmlString += '<td>' + lastUpdate + '</td>';
                         htmlString += '<td>';
                         htmlString += '<button type="button" class="btn-basic"><span>Properties</span></button>';
-                        htmlString += '<button type="button" class="btn-basic btnDownload"><span>Download</span></button>';
+                        htmlString += '<button type="button" class="btn-basic btnDownloadx"><span>Download</span></button>';
                         htmlString += '</td></tr>';
                         $('.file-list-body').append(htmlString);
                     });
@@ -391,7 +398,6 @@
 
         param.nodePath = path;
         param.nodeName = $('#inPutNodeName').val();
-        param.nodeType = "folder";
 
         $.ajax({
             url: '/folderAdd',

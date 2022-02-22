@@ -1,0 +1,28 @@
+{{#hasList}}
+<div class="pagination-wrap">
+    <ul class="pagination">
+        <li class="first">
+            <a href="javascript:movePage(1)">first</a>
+        </li>
+        <li class="pre">
+            <a href="javascript:movePage({{prevPageNo}})">prev</a>
+        </li>
+        {{#pageList}}
+            <li id="{{.}}">
+                <a href="javascript:movePage({{.}})">{{.}}</a>
+            </li>
+        {{/pageList}}
+        <li class="next">
+            <a href="javascript:movePage({{nextPageNo}})">next</a>
+        </li>
+        <li class="last">
+            <a href="javascript:movePage({{finalPageNo}})">last</a>
+        </li>
+    </ul>
+    <script>
+        $(function() {
+            $('#').addClass("active");
+        });
+    </script>
+</div>
+{{/hasList}}
