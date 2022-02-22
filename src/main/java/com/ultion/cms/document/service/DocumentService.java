@@ -10,6 +10,8 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
 import org.apache.jackrabbit.value.DateValue;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -90,34 +92,55 @@ public class DocumentService {
         return result;
     }
 
-    public String downLoad(Session session, FileDto dto) throws RepositoryException {
-
+    public String downLoad(Session session, List<FileDto> fileDtos) throws RepositoryException {
         Node root = session.getRootNode();
 
+        fileDtos.forEach(dto->{
+            Node resourceNode = null;
+            try {
+                resourceNode = findResourceNode(root, dto);
+            } catch (RepositoryException e) {
+                e.printStackTrace();
+            }
+            try (OutputStream os = new FileOutputStream("C:\\Users\\user\\Downloads\\" + resourceNode.getName());
+                 InputStream is = JcrUtils.readFile(resourceNode);) {
+                IOUtils.copy(is, os);
+            } catch (RepositoryException e) {
+                e.printStackTrace();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+
+        return "success";
+
+    }
+
+    public Node findResourceNode(Node root , FileDto dto) throws RepositoryException {
         String[] paths = dto.getPath().substring(1).split("/");
-
-        Node uploadNode = root.getNode(paths[0]);
+        Node findNode = root.getNode(paths[0]);
         for (int i = 1; i < paths.length - 1; i++) {
-            uploadNode = uploadNode.getNode(paths[i]);
+            findNode = findNode.getNode(paths[i]);
         }
-        Node fileNode = uploadNode.getNode(paths[paths.length - 1]);
-
-
-        try (OutputStream os = new FileOutputStream("C:\\Users\\user\\Downloads\\" + paths[paths.length - 1]);
-             InputStream is = JcrUtils.readFile(fileNode);
-        ) {
-
-            IOUtils.copy(is, os);
-
-            return "success";
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            return "noSuchFile";
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "amola";
+        return findNode.getNode(paths[paths.length-1]);
+    }
+    public Node findFileNode(Node root , FileDto dto) throws RepositoryException {
+        String[] paths = dto.getPath().substring(1).split("/");
+        Node findNode = root.getNode(paths[0]);
+        for (int i = 1; i < paths.length - 1; i++) {
+            findNode = findNode.getNode(paths[i]);
         }
+        return findNode;
+    }
 
+    public String getNameByDto(FileDto dto) {
+        return dto.getPath().substring(dto.getPath().lastIndexOf("/")).replace("/","");
+    }
+
+    public String getNameByPath(String path) {
+        return path.substring(path.lastIndexOf("/")).replace("/", "");
     }
 
     public Map<String, Object> getNodeList(Map<String, Object> param) throws Exception {
@@ -158,6 +181,7 @@ public class DocumentService {
                     }
 
                     fileList.add(fileDto);
+
                 }
             }
 
@@ -181,6 +205,8 @@ public class DocumentService {
         String nodePath = param.get("nodePath").toString();
         nodePath = nodePath.replaceAll("//ROOT/", "");
 
+        System.out.println("노드패스 : " + nodePath);
+
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
 
@@ -197,7 +223,7 @@ public class DocumentService {
             session.save();
             session.logout();
         } catch (Exception e) {
-            log.debug(e.getMessage());
+            e.printStackTrace();
         }
         return isSuccess;
     }
@@ -205,6 +231,7 @@ public class DocumentService {
     public boolean upload(String nodePath, MultipartHttpServletRequest request) throws Exception {
         boolean resultAdd = false;
         nodePath = nodePath.replaceAll("//ROOT/", "");
+        System.out.println("노패: "+nodePath);
         List<MultipartFile> files = request.getFiles("file");
 
         for (MultipartFile file : files) {
@@ -285,6 +312,10 @@ public class DocumentService {
         }
 
         return isSuccess;
+    }
+
+    public void reNamingFile(Node node , String newName) throws RepositoryException {
+        node.getSession().move(node.getPath(), node.getParent().getPath() + "/" + newName);
     }
 
 }

@@ -27,11 +27,11 @@
             <a href="/index"><span>Clinic</span></a>
         </h1>
         <div class="gnb-menu">
-            <div class="menu" >
+            <div class="menu">
                 <a href="#">File</a>
                 <ul class="sub-menu" id="fileMenu">
                     <li>
-                        <a href="#" class="mutil-down"><span>Multi Download</span></a>
+                        <a href="#" class="multi-down"><span>Multi Download</span></a>
                     </li>
                     <li>
                         <a href="#"><span>submenu</span></a>
@@ -176,7 +176,6 @@
                             <a href="#">5</a>
                         </li>
                         <li>
-                            <a href="#">6</a>
                         </li>
                         <li>
                             <a href="#">7</a>
@@ -245,20 +244,26 @@
             }
         ]
 
-    $(document).on('click', '.btnDownload', function () {
+    $(document).on('click', '.multi-down', function () {
         const param = {};
-        let path = $(this).parent().siblings('.filePath').text();
 
-        param.nodePath = path;
-        param.nodeName = $('#inPutNodeName').val();
-        param.nodeType = "folder";
+        let list = [];
+
+        $('.file-list-body').find('.chk-file:checked').each(function () {
+            let path = $(this).parent().siblings('.filePath').text();
+            let name = $(this).parent().siblings('.fileName').text();
+
+            list.push({'name':name, 'path': path});
+        });
+
+        console.log(list);
 
         $.ajax({
             url: '/download',
             processData: false,
             contentType: 'application/json',
             dataType: 'JSON',
-            data: JSON.stringify(param),
+            data: JSON.stringify(list),
             type: 'POST',
             success: function (result) {
                 if (result.result === 'success') {
@@ -285,7 +290,7 @@
 
         if (1 === nodePathLen && nodePath === '')
             param.depth = 1;
-        else if(1 === nodePathLen && nodePath !== '')
+        else if (1 === nodePathLen && nodePath !== '')
             param.depth = 2;
         else
             param.depth = 3;
@@ -325,7 +330,7 @@
 
                         let htmlString = '<tr>';
                         htmlString += '<td class="left fileName">';
-                        htmlString += '<input type="checkbox" class="chk-file" value="'+ filePath+'">';
+                        htmlString += '<input type="checkbox" class="chk-file" value="' + filePath + '">';
                         htmlString += '</td>';
                         htmlString += '<td class="left fileName">' + fileName + '</td>';
                         htmlString += '<td class="left filePath" style="display: none;">' + filePath + '</td>';
@@ -365,7 +370,7 @@
             type: 'POST',
             success: function (result) {
 
-                if(result.resultAdd){
+                if (result.resultAdd) {
                     alert('업로드성공');
                 } else {
                     alert('업로드실패');

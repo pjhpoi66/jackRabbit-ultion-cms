@@ -13,7 +13,9 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.jcr.Repository;
 import javax.jcr.Session;
 import javax.jcr.SimpleCredentials;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -79,18 +81,23 @@ public class DocumentController {
 
     @PostMapping("/download")
     @ResponseBody
-    public Map<String, String> down(@RequestBody Map<String,String>  map ) throws Exception{
+    public Map<String, String> down(@RequestBody List<FileDto>  fileDtos ) throws Exception{
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
         Map<String, String> resultMap = new HashMap<>();
-        FileDto dto = FileDto.builder()
-                .name(map.get("nodeName"))
-                .path(map.get("nodePath"))
-                .build();
-
-        resultMap.put("result", documentService.downLoad(session, dto));
+     /*   List<FileDto> fileDtos = new ArrayList<>();
+        mapList.forEach(map -> {
+            fileDtos.add(FileDto.builder()
+                    .name(map.get("nodeName"))
+                    .path(map.get("nodePath"))
+                    .build()
+            );
+        });*/
+        resultMap.put("result", documentService.downLoad(session, fileDtos));
         session.logout();
         return resultMap;
     }
+
+
 
 }
