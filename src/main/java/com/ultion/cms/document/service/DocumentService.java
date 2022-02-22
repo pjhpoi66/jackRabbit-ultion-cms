@@ -8,6 +8,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
+import org.apache.jackrabbit.value.DateValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.jcr.*;
 import javax.jcr.nodetype.NodeType;
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -29,8 +31,6 @@ public class DocumentService {
     private String uploadPath;
     @org.springframework.beans.factory.annotation.Value("${jcr.rep.home}")
     private String jcrHome;
-
-    private static List<Map<String, Object>> nodeList = new ArrayList<>();
 
     public Map<String, Object> indexPageLoad() throws Exception {
         Map<String, Object> result = new HashMap<>();
@@ -80,7 +80,8 @@ public class DocumentService {
                         dep1NodeList.add(dep1NodeMap);
                 }
             }
-
+            System.out.println("1111111111111");
+            System.out.println(dep1NodeList);
             result.put("dep1NodeList", dep1NodeList);
 
             session.save();
@@ -148,6 +149,14 @@ public class DocumentService {
                     FileDto fileDto = new FileDto();
                     fileDto.setName(fileNode.getName());
                     fileDto.setPath(fileNode.getPath());
+                    if(fileNode.isNodeType(("nt:file"))){
+                        Node res = fileNode.getNode(Property.JCR_CONTENT);
+                        Date date = res.getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime();
+                        String lastUpdate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
+                        fileDto.setLastUpdate(lastUpdate);
+                    } else {
+                        fileDto.setLastUpdate("");
+                    }
 
                     fileList.add(fileDto);
                 }
@@ -179,8 +188,10 @@ public class DocumentService {
         try {
             Node root = session.getRootNode();
             if ("nt:folder".equals(nodeType)) {
-                if (nodePath.equals("")) root.addNode(nodeName, nodeType);
-                else root.addNode(nodePath + "/" + nodeName, nodeType);
+                Node addNode = root.addNode(nodePath + "/" + nodeName, nodeType);
+                if (nodePath.equals("")) {
+                    addNode = root.addNode(nodeName, nodeType);
+                }
             }
 
             isSuccess = true;
@@ -218,7 +229,13 @@ public class DocumentService {
                 Node fileNode = targetNode.addNode(file.getOriginalFilename(), NodeType.NT_FILE);
                 Node resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
                 resNode.setProperty(Property.JCR_MIMETYPE, NodeType.NT_FILE);
-                resNode.setProperty(Property.JCR_LAST_MODIFIED, Calendar.getInstance());
+                Calendar time = Calendar.getInstance();
+                System.out.println("시간쓰");
+                System.out.println(time.getTime());
+                System.out.println("잭래빗쓰");
+                DateValue dv = new DateValue(time);
+                System.out.println(dv.getDate().getTime());
+                resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
                 resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
                 resNode.setProperty(Property.JCR_DATA, file.getInputStream());
 

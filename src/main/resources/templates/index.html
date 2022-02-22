@@ -31,7 +31,7 @@
                 <a href="#">File</a>
                 <ul class="sub-menu" id="fileMenu">
                     <li>
-                        <a href="#"><span>submenu</span></a>
+                        <a href="#" class="mutil-down"><span>Multi Download</span></a>
                     </li>
                     <li>
                         <a href="#"><span>submenu</span></a>
@@ -115,6 +115,7 @@
                 <div class="table-wrap table-col">
                     <table>
                         <colgroup>
+                            <col style="width: 50px"/>
                             <col style="width: auto"/>
                             <col style="width: 200px"/>
                             <col style="width: 200px"/>
@@ -123,6 +124,7 @@
                         </colgroup>
                         <thead>
                         <tr>
+                            <th scope="col">Select</th>
                             <th scope="col">File Name</th>
                             <th scope="col">Status</th>
                             <th scope="col">Owner</th>
@@ -211,14 +213,18 @@
 <!-- ztree 관련: https://lee-mandu.tistory.com/507, http://www.treejs.cn/v3/demo.php#_101 -->
 <script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
 <script th:inline="javascript">
+    var dep1List = [[${dep1NodeList}]];
+
+    $(document).ready(function () {
+        zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
+    });
+
     $(".custom-file-input").on("change", function () {
         var fileName = $(this).val().split("\\").pop();
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
         let filePath = $('.file-path').text();
         $('#nodePath').val(filePath);
     });
-
-    var dep1List = [[${dep1NodeList}]];
 
     var zTreeObj,
         setting = {
@@ -273,21 +279,18 @@
         $('.file-path').text('//ROOT/' + nodePath);
 
         const param = {};
-        console.log("노패 :" + nodePath);
         param.target = nodePath;
         let nodePathArr = nodePath.split("/");
-        console.log(nodePath);
         let nodePathLen = nodePathArr.length;
-        console.log("길이 :" + nodePathLen);
 
-        if (1 === nodePathLen && nodePath === '') {
+        if (1 === nodePathLen && nodePath === '')
             param.depth = 1;
-        }
-        else if(1 === nodePathLen && nodePath !== '') {
+        else if(1 === nodePathLen && nodePath !== '')
             param.depth = 2;
-        }
-        else param.depth = 3;
+        else
+            param.depth = 3;
 
+        //노드 리스트업
         $.ajax({
             url: '/nodeList',
             processData: false,
@@ -301,7 +304,6 @@
 
                 let fileList = [];
                 fileList = result.fileList;
-                console.log(fileList);
                 let fileListLength = 0;
                 if (fileList != null) {
                     fileListLength = fileList.length;
@@ -321,7 +323,11 @@
                         let fileName = item.name;
                         let lastUpdate = item.lastUpdate;
 
-                        let htmlString = '<tr><td class="left fileName">' + fileName + '</td>';
+                        let htmlString = '<tr>';
+                        htmlString += '<td class="left fileName">';
+                        htmlString += '<input type="checkbox" class="chk-file" value="'+ filePath+'">';
+                        htmlString += '</td>';
+                        htmlString += '<td class="left fileName">' + fileName + '</td>';
                         htmlString += '<td class="left filePath" style="display: none;">' + filePath + '</td>';
                         htmlString += '<td>Edited</td>';
                         htmlString += '<td>ADMIN</td>';
@@ -339,7 +345,7 @@
                 console.log(error);
             }
         });
-        return dep1List;
+
     }
 
     $(document).ready(function () {
@@ -361,7 +367,6 @@
 
                 if(result.resultAdd){
                     alert('업로드성공');
-                    location.reload();
                 } else {
                     alert('업로드실패');
                 }
