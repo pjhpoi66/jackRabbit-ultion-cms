@@ -1,6 +1,7 @@
 package com.ultion.cms.document.service;
 
 import com.ultion.cms.core.util.DateUtil;
+import com.ultion.cms.core.web.Pagination;
 import com.ultion.cms.file.FileDto;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
@@ -9,8 +10,6 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
 import org.apache.jackrabbit.value.DateValue;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -21,7 +20,6 @@ import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
 
 @Service
 @Slf4j
@@ -80,7 +78,7 @@ public class DocumentService {
                         dep1NodeList.add(dep1NodeMap);
                 }
             }
-            System.out.println("1111111111111");
+
             System.out.println(dep1NodeList);
             result.put("dep1NodeList", dep1NodeList);
 
@@ -122,7 +120,7 @@ public class DocumentService {
 
     }
 
-    public Map<String, Object> getFileList(Map<String, Object> param) throws Exception {
+    public Map<String, Object> getNodeList(Map<String, Object> param) throws Exception {
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
         Map<String, Object> resultMap = new HashMap<>();
@@ -142,6 +140,7 @@ public class DocumentService {
             }
 
             NodeIterator fileNodes = node.getNodes();
+
             while (fileNodes.hasNext()) {
 
                 Node fileNode = fileNodes.nextNode();
@@ -161,6 +160,7 @@ public class DocumentService {
                     fileList.add(fileDto);
                 }
             }
+
 
         } finally {
             session.logout();
@@ -225,16 +225,17 @@ public class DocumentService {
                 Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
 
                 Node root = session.getRootNode();
-                Node targetNode = root.getNode(nodePath);
+                Node targetNode = root;
+                System.out.println(nodePath);
+                if (!nodePath.equals("")){
+                    targetNode = root.getNode(nodePath);
+                }
                 Node fileNode = targetNode.addNode(file.getOriginalFilename(), NodeType.NT_FILE);
                 Node resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
+
                 resNode.setProperty(Property.JCR_MIMETYPE, NodeType.NT_FILE);
                 Calendar time = Calendar.getInstance();
-                System.out.println("시간쓰");
-                System.out.println(time.getTime());
-                System.out.println("잭래빗쓰");
                 DateValue dv = new DateValue(time);
-                System.out.println(dv.getDate().getTime());
                 resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
                 resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
                 resNode.setProperty(Property.JCR_DATA, file.getInputStream());
