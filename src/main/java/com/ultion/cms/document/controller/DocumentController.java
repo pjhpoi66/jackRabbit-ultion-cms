@@ -81,6 +81,19 @@ public class DocumentController {
 
     @PostMapping("/download")
     @ResponseBody
+    public Map<String, String> down2(@RequestBody FileDto fileDto) throws  Exception {
+        Repository repository = JcrUtils.getRepository();
+        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
+        List<FileDto> fileDtos = new ArrayList<>();
+        fileDtos.add(fileDto);
+        Map<String, String> resultMap = new HashMap<>();
+        resultMap.put("result", documentService.downLoad(session, fileDtos));
+        session.logout();
+        return resultMap;
+    }
+
+    @PostMapping("/download2")
+    @ResponseBody
     public Map<String, String> down(@RequestBody List<FileDto>  fileDtos ) throws Exception{
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
