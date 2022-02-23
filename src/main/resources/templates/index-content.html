@@ -1,0 +1,50 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<div class="table-wrap table-col table-data" th:fragment="index-content">
+    <table>
+        <colgroup>
+            <col style="width: 50px"/>
+            <col style="width: auto"/>
+            <col style="width: 200px"/>
+            <col style="width: 200px"/>
+            <col style="width: 200px"/>
+            <col style="width: 300px"/>
+        </colgroup>
+        <thead>
+        <tr>
+            <th scope="col">Select</th>
+            <th scope="col">File Name</th>
+            <th scope="col">Status</th>
+            <th scope="col">Owner</th>
+            <th scope="col">Last Update</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody class="file-list-body">
+
+        <!-- 데이터가 없을때 -->
+        <tr th:if="${fileMap.fileList == null}">
+            <td colspan="5" class="no-data">
+                <img src="/static/assets/images/no-data.png" alt="No data found"/>
+            </td>
+        </tr>
+
+        <tr th:each="file : ${fileMap.fileList}">
+            <td class="left chk-path">
+                <input type="checkbox" class="chk-file" th:value="|${file.path}|">
+            </td>
+            <td class="left fileName" th:text="|${file.name}|"></td>
+            <td class="left filePath" style="display: none;" th:text="|${file.path}|"></td>
+            <td>Edited</td>
+            <td>krchoi</td>
+            <td th:text="|${file.lastUpdate}|"></td>
+            <td>
+                <button type="button" class="btn-basic"><span>Properties</span></button>
+                <button type="button" class="btn-basic"><span>Download</span></button>
+            </td>
+        </tr>
+
+        </tbody>
+    </table>
+</div>
+<th:block th:replace="common/pagination"></th:block>
+</html>

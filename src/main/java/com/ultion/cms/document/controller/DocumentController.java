@@ -39,10 +39,10 @@ public class DocumentController {
 
     @PostMapping("/nodeList")
     @ResponseBody
-    public Map<String, Object> getNodeList(@RequestBody Map<String, Object> param) throws Exception{
+    public ModelAndView getNodeList(@RequestBody Map<String, Object> param) throws Exception{
         Map<String, Object> resultMap = documentService.indexPageLoad();
-        resultMap.put("fileList", documentService.getNodeList(param).get("fileList"));
-        return resultMap;
+        resultMap.put("fileMap", documentService.getNodeList(param));
+        return new ModelAndView("index-content", resultMap);
     }
 
     @GetMapping("/tt")

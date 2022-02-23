@@ -96,9 +96,39 @@ public class DocumentService {
                 }
             }
 
-            System.out.println(dep1NodeList);
             result.put("dep1NodeList", dep1NodeList);
-            result.put("rootChildList", rootChildList);
+
+            int rootChildListSize = rootChildList.size();
+            Pagination pagination = new Pagination();
+            int pageSize = 5;
+            pagination.setPageSize(pageSize);
+            pagination.setPageNo(1);
+            pagination.setTotalCount(rootChildListSize);
+
+
+            int count = 0;
+            if (rootChildListSize > pageSize) {
+                List<FileDto> newChildList = new ArrayList<>();
+                while (count < pageSize) {
+                    count++;
+                    FileDto fileDto = rootChildList.get(count);
+                    newChildList.add(fileDto);
+                }
+                rootChildList = newChildList;
+            }
+            Map<String, Object> pagingMap = new HashMap<>();
+            pagingMap.put("pageList", pagination.getPageList());
+            pagingMap.put("pageNo", pagination.getPageNo());
+            pagingMap.put("pageSize", pagination.getPageSize());
+            pagingMap.put("prevPageNo", pagination.getPrevPageNo());
+            pagingMap.put("nextPageNo", pagination.getNextPageNo());
+            pagingMap.put("finalPageNo", pagination.getFinalPageNo());
+
+            Map<String, Object> fileMap = new HashMap<>();
+            fileMap.put("fileList", rootChildList);
+            fileMap.put("pagingMap", pagingMap);
+
+            result.put("fileMap", fileMap);
 
             session.save();
         } finally {
@@ -161,11 +191,12 @@ public class DocumentService {
     }
 
     public Map<String, Object> getNodeList(Map<String, Object> param) throws Exception {
+
         Repository repository = JcrUtils.getRepository();
         Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
         Map<String, Object> resultMap = new HashMap<>();
 
-        int depth = (int) param.get("depth");
+        int depth = Integer.parseInt(param.get("depth").toString());
 
         String targetString = param.get("target").toString();
         String[] targetArr = targetString.split("/");
@@ -202,14 +233,46 @@ public class DocumentService {
                 }
             }
 
-
         } finally {
             session.logout();
         }
-        System.out.println(fileList);
 
+        int rootChildListSize = fileList.size();
+        Pagination pagination = new Pagination();
+        final int pageSize = 5;
+        pagination.setPageSize(pageSize);
+        pagination.setPageNo(Integer.parseInt(param.get("pageNo").toString()));
+        pagination.setTotalCount(rootChildListSize);
+
+
+        int count = 0;
+        if (rootChildListSize > pageSize) {
+            int rowNum = pagination.getStartRowNum();
+            List<FileDto> newChildList = new ArrayList<>();
+            while (count < pageSize) { //페이지 사이즈만큼
+                int sum = count + rowNum;
+                System.out.println("썸" + sum);
+                System.out.println("페싸" + pageSize);
+                if(sum < rootChildListSize){
+                    System.out.println("카운트"+count);
+                    System.out.println("로넘"+rowNum);
+                    FileDto fileDto = fileList.get(sum);
+                    newChildList.add(fileDto);
+                }
+                count++;
+            }
+            fileList = newChildList;
+        }
+        Map<String, Object> pagingMap = new HashMap<>();
+        pagingMap.put("pageList", pagination.getPageList());
+        pagingMap.put("pageNo", pagination.getPageNo());
+        pagingMap.put("pageSize", pagination.getPageSize());
+        pagingMap.put("prevPageNo", pagination.getPrevPageNo());
+        pagingMap.put("nextPageNo", pagination.getNextPageNo());
+        pagingMap.put("finalPageNo", pagination.getFinalPageNo());
+
+        resultMap.put("pagingMap", pagingMap);
         resultMap.put("fileList", fileList);
-
 
         return resultMap;
     }
