@@ -251,12 +251,30 @@
             }
         ]
 
-    $(document).on('click', '.btnDownload', function () {
-        let path = $(this).parent().siblings('.filePath').text();
-        let name = $(this).parent().siblings('.fileName').text();
+    $(document).on('click', '.btnDownload', async function () {
+        console.log(this.className);
+        let path = document.getElementsByClassName(this.className).parentNode.siblings('.filePath').text();
+        // let path = $(this).parent().siblings('.filePath').text();
+        let name = this.parentElement.siblings('fileName').text();
         let data = {'name': name, 'path': path};
 
-        $.ajax({
+        //fetch구현
+
+        fetch("/download", {
+            method: 'POST',
+            headers: {'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'},
+            body: JSON.stringify(data)}).then(response => response.json())
+            .then(json => {
+                if (json['result'] === 'success') {
+                    alert('성공');
+                    console.log(json['result']);
+                } else {
+                    console.log(json['result']);
+                }
+            }).catch(e => alert('다운실패'));
+
+      /*  $.ajax({
             url: '/download',
             processData: false,
             contentType: 'application/json',
@@ -271,17 +289,47 @@
             error: function (request, status, error) {
                 console.log(error);
             }
-        });
+        });*/
     });
 
-   /* $(document).on('click', '.multi-down', function () {
+    /* $(document).on('click', '.multi-down', function () {
+         let list = [];
+         let downLoadCount = 0;
+         $('.file-list-body').find('.chk-file:checked').each(function () {
+             let path = $(this).parent().siblings('.filePath').text();
+             let name = $(this).parent().siblings('.fileName').text();
+             downLoadCount++;
+             list.push({'name':name, 'path': path});
+         });
+
+         console.log(list);
+
+         $.ajax({
+             url: '/download2',
+             processData: false,
+             contentType: 'application/json',
+             dataType: 'JSON',
+             data: JSON.stringify(list),
+             type: 'POST',
+             success: function (result) {
+                 if (result.result === 'success') {
+                     alert(downLoadCount+'개 파일 다운완료');
+                 } else alert('다운실패');
+             },
+             error: function (request, status, error) {
+                 console.log(error);
+             }
+         });
+     });*/
+
+    $(document).on('click', '.multi-down', function () {
         let list = [];
         let downLoadCount = 0;
         $('.file-list-body').find('.chk-file:checked').each(function () {
             let path = $(this).parent().siblings('.filePath').text();
             let name = $(this).parent().siblings('.fileName').text();
             downLoadCount++;
-            list.push({'name':name, 'path': path});
+            list.push({'name': name, 'path': path});
         });
 
         console.log(list);
@@ -295,14 +343,15 @@
             type: 'POST',
             success: function (result) {
                 if (result.result === 'success') {
-                    alert(downLoadCount+'개 파일 다운완료');
+                    alert(downLoadCount + '개 파일 다운완료');
                 } else alert('다운실패');
             },
             error: function (request, status, error) {
                 console.log(error);
             }
         });
-    });*/
+    });
+
 
     function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
         let nodePath = treeNode.nodePath;
