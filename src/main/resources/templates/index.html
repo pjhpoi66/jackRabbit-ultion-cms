@@ -93,119 +93,32 @@
                                 <td>
                                     <span class="file-path">//ROOT</span>
                                 </td>
+                                <form action="/upload" method="post" id="uploadForm" enctype="multipart/form-data">
+                                <div class="form-group row">
+                                    <label for="inputFile" class="col-sm-2 col-form-label"><strong>첨부 파일</strong></label>
+                                    <div class="col-sm-10">
+                                        <div class="custom-file" id="inputFile">
+                                            <input name="file" type="file" class="custom-file-input" id="customFile"
+                                                   multiple="multiple">
+                                            <input type="hidden" name="nodePath" id="nodePath">
+                                            <label class="custom-file-label" for="customFile">파일을 선택해 주세요.</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
                             </tr>
                             </tbody>
                         </table>
                     </div>
-                    <form action="/upload" method="post" id="uploadForm" enctype="multipart/form-data">
-                        <div class="form-group row">
-                            <label for="inputFile" class="col-sm-2 col-form-label"><strong>첨부 파일</strong></label>
-                            <div class="col-sm-10">
-                                <div class="custom-file" id="inputFile">
-                                    <input name="file" type="file" class="custom-file-input" id="customFile"
-                                           multiple="multiple">
-                                    <input type="hidden" name="nodePath" id="nodePath">
-                                    <label class="custom-file-label" for="customFile">파일을 선택해 주세요.</label>
-                                </div>
-                            </div>
-                        </div>
-                    </form>
                     <button type="button" class="btn-basic" id="btnUpload"><span>Upload</span></button>
                 </div>
-                <div class="table-wrap table-col">
-                    <table>
-                        <colgroup>
-                            <col style="width: 50px"/>
-                            <col style="width: auto"/>
-                            <col style="width: 200px"/>
-                            <col style="width: 200px"/>
-                            <col style="width: 200px"/>
-                            <col style="width: 300px"/>
-                        </colgroup>
-                        <thead>
-                        <tr>
-                            <th scope="col">Select</th>
-                            <th scope="col">File Name</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Owner</th>
-                            <th scope="col">Last Update</th>
-                            <th scope="col"></th>
-                        </tr>
-                        </thead>
-                        <tbody class="file-list-body">
 
-                        <!-- 데이터가 없을때 -->
-                        <tr th:if="${rootChildList == null}">
-                            <td colspan="5" class="no-data">
-                                <img src="/static/assets/images/no-data.png" alt="No data found"/>
-                            </td>
-                        </tr>
-
-                        <tr th:each="file : ${rootChildList}">
-                            <td class="left chk-path">
-                                <input type="checkbox" class="chk-file" th:value="|${file.path}|">
-                            </td>
-                            <td class="left fileName" th:text="|${file.name}|"></td>
-                            <td class="left filePath" style="display: none;" th:text="|${file.path}|"></td>
-                            <td>Edited</td>
-                            <td>krchoi</td>
-                            <td th:text="|${file.lastUpdate}|"></td>
-                            <td>
-                                <button type="button" class="btn-basic"><span>Properties</span></button>
-                                <button type="button" class="btn-basic"><span>Download</span></button>
-                            </td>
-                        </tr>
-
-                        </tbody>
-                    </table>
-                </div>
-                <!--<div class="pagination-wrap">
-                    <ul class="pagination">
-                        <li class="first">
-                            <a href="#">맨 앞</a>
-                        </li>
-                        <li class="pre">
-                            <a href="#">이전</a>
-                        </li>
-                        <li class="active">
-                            <a href="#">1</a>
-                        </li>
-                        <li>
-                            <a href="#">2</a>
-                        </li>
-                        <li>
-                            <a href="#">3</a>
-                        </li>
-                        <li>
-                            <a href="#">4</a>
-                        </li>
-                        <li>
-                            <a href="#">5</a>
-                        </li>
-                        <li>
-                        </li>
-                        <li>
-                            <a href="#">7</a>
-                        </li>
-                        <li>
-                            <a href="#">8</a>
-                        </li>
-                        <li>
-                            <a href="#">9</a>
-                        </li>
-                        <li>
-                            <a href="#">10</a>
-                        </li>
-                        <li class="next">
-                            <a href="#">다음</a>
-                        </li>
-                        <li class="last">
-                            <a href="#">맨 뒤</a>
-                        </li>
-                    </ul>
-                </div>-->
+                <th:block th:replace="index-content"></th:block>
 
             </div>
+            <input type="hidden" id="node-path">
+            <input type="hidden" id="node-depth">
+            <input type="hidden" id="page-no">
         </section>
     </div>
 </div>
@@ -220,10 +133,6 @@
 <script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
 <script th:inline="javascript">
     var dep1List = [[${dep1NodeList}]];
-
-    $(document).ready(function () {
-        zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
-    });
 
     $(".custom-file-input").on("change", function () {
         var fileName = $(this).val().split("\\").pop();
@@ -342,61 +251,10 @@
         else
             param.depth = 3;
 
-        //노드 리스트업
-        $.ajax({
-            url: '/nodeList',
-            processData: false,
-            contentType: 'application/json',
-            type: 'POST',
-            dataType: 'JSON',
-            data: JSON.stringify(param),
-            success: function (result) {
-                dep1List = result.dep1NodeList;
-                zTreeNodes[0].children = dep1List;
+        $('#node-path').val(nodePath);
+        $('#node-depth').val(param.depth);
 
-                let fileList = [];
-                fileList = result.fileList;
-                let fileListLength = 0;
-                if (fileList != null) {
-                    fileListLength = fileList.length;
-                }
-
-                if (fileListLength < 1) {
-                    $('.file-list-body').children('tr').remove();
-                    let htmlString = '<tr><td colspan="5" class="no-data">';
-                    htmlString += '<img src="/static/assets/images/no-data.png" alt="No data found" />';
-                    htmlString += '</td>';
-                    htmlString += '</tr>';
-                    $('.file-list-body').append(htmlString);
-                } else {
-                    $('.file-list-body').children('tr').remove();
-                    fileList.forEach(function (item, index) {
-                        let filePath = item.path;
-                        let fileName = item.name;
-                        let lastUpdate = item.lastUpdate;
-
-                        let htmlString = '<tr>';
-                        htmlString += '<td class="left fileName">';
-                        htmlString += '<input type="checkbox" class="chk-file" value="' + filePath + '">';
-                        htmlString += '</td>';
-                        htmlString += '<td class="left fileName">' + fileName + '</td>';
-                        htmlString += '<td class="left filePath" style="display: none;">' + filePath + '</td>';
-                        htmlString += '<td>Edited</td>';
-                        htmlString += '<td>ADMIN</td>';
-                        htmlString += '<td>' + lastUpdate + '</td>';
-                        htmlString += '<td>';
-                        htmlString += '<button type="button" class="btn-basic"><span>Properties</span></button>';
-                        htmlString += '<button type="button" class="btn-basic btnDownload"><span>Download</span></button>';
-                        htmlString += '</td></tr>';
-                        $('.file-list-body').append(htmlString);
-                    });
-                }
-
-            },
-            error: function (request, status, error) {
-                console.log(error);
-            }
-        });
+        movePage(1, nodePath, param.depth);
 
     }
 
@@ -481,6 +339,46 @@
         });
     });
 
+    //페이징
+    function movePage(pageNo, target, depth) {
+
+        $('#page-no').val(pageNo);
+
+        if(target == null && depth == null){
+            target = $('#node-path').val();
+            depth = $('#node-depth').val();
+        }
+
+        var paramData = dataBind(pageNo, target, depth);
+
+        $.ajax({
+            type: 'POST',
+            url: '/nodeList',
+            contentType: 'application/json; charset=utf-8',
+            data: paramData,
+            traditional: true,
+            cache: false,
+        }).done(function (data) {
+            $('.table-data').remove();
+            $('.pagination-wrap').remove();
+
+            $('.file-list').append(data);
+
+        }).fail(function (request, error) {
+            console.log(request.responseText);
+            console.log('로딩 실패');
+        });
+    }
+
+    function dataBind(pageNo, target, depth) {
+        const data = {};
+        data.pageNo = pageNo;
+        data.target = target;
+        data.depth = depth;
+
+        const jsonData = JSON.stringify(data);
+        return jsonData;
+    }
 
 </script>
 </html>

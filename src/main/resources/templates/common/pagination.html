@@ -1,28 +1,34 @@
-{{#hasList}}
-<div class="pagination-wrap">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<div class="pagination-wrap" th:fragment="pagination">
     <ul class="pagination">
         <li class="first">
             <a href="javascript:movePage(1)">first</a>
         </li>
         <li class="pre">
-            <a href="javascript:movePage({{prevPageNo}})">prev</a>
+            <a th:attr="onclick=|movePage('${fileMap.pagingMap.prevPageNo}')|">{{.}}</a>
         </li>
-        {{#pageList}}
-            <li id="{{.}}">
-                <a href="javascript:movePage({{.}})">{{.}}</a>
+
+            <li th:each="pageNo : ${fileMap.pagingMap.pageList}" th:id="|${pageNo}|">
+                <a th:attr="onclick=|movePage('${pageNo}')|" th:text="|${pageNo}|" ></a>
             </li>
-        {{/pageList}}
+
         <li class="next">
-            <a href="javascript:movePage({{nextPageNo}})">next</a>
+            <a th:attr="onclick=|movePage('${fileMap.pagingMap.nextPageNo}')|">next</a>
         </li>
         <li class="last">
-            <a href="javascript:movePage({{finalPageNo}})">last</a>
+            <a th:attr="onclick=|movePage('${fileMap.pagingMap.finalPageNo}')|">last</a>
         </li>
     </ul>
     <script>
-        $(function() {
-            $('#').addClass("active");
+
+        $(function () {
+            var pageNos = $('#page-no').val();
+            if(pageNos == '' || pageNos == null){
+                pageNos = 1;
+            }
+            $('#' + pageNos).addClass("active");
         });
     </script>
 </div>
-{{/hasList}}
+</html>
