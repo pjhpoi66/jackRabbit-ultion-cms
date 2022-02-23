@@ -233,7 +233,9 @@
 
 
     function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
-        let nodePath = treeNode.nodePath;
+        let nodePath = treeNode;
+        if(treeId != 'click')
+            nodePath = treeNode.nodePath;
 
         const strLength = nodePath.length;
         nodePath = nodePath.substr(1, strLength - 1);

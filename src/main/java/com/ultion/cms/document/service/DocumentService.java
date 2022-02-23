@@ -3,6 +3,7 @@ package com.ultion.cms.document.service;
 import com.ultion.cms.core.util.DateUtil;
 import com.ultion.cms.core.web.Pagination;
 import com.ultion.cms.file.FileDto;
+import com.ultion.cms.file.FileType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
@@ -47,13 +48,6 @@ public class DocumentService {
             while (dep1.hasNext()) {
                 Node dep1Node = dep1.nextNode();
 
-                /*System.out.println("1111111111111111");
-                System.out.println(dep1Node.isNodeType("nt:file"));
-                if(dep1Node.isNodeType("nt:file")){
-                    Date date = dep1Node.getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime();
-                    String lastUpdate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
-                    fileDto.setLastUpdate(lastUpdate);
-                }*/
                 if (!dep1Node.getName().contains(":")) {
                     FileDto fileDto = new FileDto();
                     fileDto.setName(dep1Node.getName());
@@ -219,13 +213,16 @@ public class DocumentService {
                     FileDto fileDto = new FileDto();
                     fileDto.setName(fileNode.getName());
                     fileDto.setPath(fileNode.getPath());
+
                     if (fileNode.isNodeType(("nt:file"))) {
                         Node res = fileNode.getNode(Property.JCR_CONTENT);
                         Date date = res.getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime();
                         String lastUpdate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
                         fileDto.setLastUpdate(lastUpdate);
+                        fileDto.setContentType(FileType.FILE.getValue());
                     } else {
                         fileDto.setLastUpdate("");
+                        fileDto.setContentType(FileType.FOLDER.getValue());
                     }
 
                     fileList.add(fileDto);
@@ -251,11 +248,8 @@ public class DocumentService {
             List<FileDto> newChildList = new ArrayList<>();
             while (count < pageSize) { //페이지 사이즈만큼
                 int sum = count + rowNum;
-                System.out.println("썸" + sum);
-                System.out.println("페싸" + pageSize);
                 if(sum < rootChildListSize){
-                    System.out.println("카운트"+count);
-                    System.out.println("로넘"+rowNum);
+
                     FileDto fileDto = fileList.get(sum);
                     newChildList.add(fileDto);
                 }
@@ -311,7 +305,6 @@ public class DocumentService {
     public boolean upload(String nodePath, MultipartHttpServletRequest request) throws Exception {
         boolean resultAdd = false;
         nodePath = nodePath.replaceAll("//ROOT/", "");
-        System.out.println("노패: " + nodePath);
         List<MultipartFile> files = request.getFiles("file");
 
         for (MultipartFile file : files) {
@@ -320,7 +313,9 @@ public class DocumentService {
             String fileBaseName = FilenameUtils.getBaseName(fileName);
 
             try {
-
+                //일반 파일 업로드
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) uploadDir.mkdirs();
                 File temp = new File(fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
 
                 //노드 접근
@@ -342,6 +337,8 @@ public class DocumentService {
                 resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
                 resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
                 resNode.setProperty(Property.JCR_DATA, file.getInputStream());
+
+                file.transferTo(temp);
 
                 //데이터스토어 레코드추가
                 FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);

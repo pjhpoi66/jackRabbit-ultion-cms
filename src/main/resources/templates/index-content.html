@@ -32,7 +32,10 @@
             <td class="left chk-path">
                 <input type="checkbox" class="chk-file" th:value="|${file.path}|">
             </td>
-            <td class="left fileName" th:text="|${file.name}|"></td>
+            <td class="left fileName" th:text="|${file.name}|" th:if="${file.contentType == 'file'}"></td>
+            <td class="left fileName" th:if="${file.contentType == 'folder'}">
+                <a th:text="|${file.name}|" th:attr="onclick=|onClick('1','click','${file.path}')|"></a>
+            </td>
             <td class="left filePath" style="display: none;" th:text="|${file.path}|"></td>
             <td>Edited</td>
             <td>krchoi</td>
