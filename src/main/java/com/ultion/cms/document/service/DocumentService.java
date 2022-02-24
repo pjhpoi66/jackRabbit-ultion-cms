@@ -58,6 +58,7 @@ public class DocumentService {
                     if (dep2.getSize() < 1) {
                         dep1NodeMap.put("hasChild", false);
                     } else {
+                        //폴더리스트
                         dep2 = dep1Node.getNodes();
                         List<Map<String, Object>> dep2NodeList = new ArrayList<>();
 
@@ -79,6 +80,7 @@ public class DocumentService {
                     dep1NodeMap.put("nodePath", dep1Node.getPath());
                     dep1NodeMap.put("nodeIndex", dep1Node.getIndex());
 
+                    //폴더리스트 데이터들
                     if (dep1Node.isNodeType("nt:folder"))
                         dep1NodeList.add(dep1NodeMap);
                 }
@@ -118,63 +120,9 @@ public class DocumentService {
 
             session.save();
         } finally {
-
 //            session.logout();
         }
         return result;
-    }
-
-    public String downLoad(Session session, List<FileDto> fileDtos) throws RepositoryException {
-        Node root = session.getRootNode();
-
-        fileDtos.forEach(dto -> {
-            Node resourceNode = null;
-            try {
-                resourceNode = findResourceNode(root, dto);
-            } catch (RepositoryException e) {
-                e.printStackTrace();
-            }
-            try (OutputStream os = new FileOutputStream("C:\\Users\\user\\Downloads\\" + resourceNode.getName());
-                 InputStream is = JcrUtils.readFile(resourceNode);) {
-                IOUtils.copy(is, os);
-            } catch (RepositoryException e) {
-                e.printStackTrace();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-//        session.logout();
-        return "success";
-
-    }
-
-    public Node findResourceNode(Node root, FileDto dto) throws RepositoryException {
-        String[] paths = dto.getPath().substring(1).split("/");
-        Node findNode = root.getNode(paths[0]);
-        for (int i = 1; i < paths.length - 1; i++) {
-            findNode = findNode.getNode(paths[i]);
-        }
-        return findNode.getNode(paths[paths.length - 1]);
-    }
-
-    public Node findFileNode(Node root, FileDto dto) throws RepositoryException {
-        String[] paths = dto.getPath().substring(1).split("/");
-        Node findNode = root.getNode(paths[0]);
-        for (int i = 1; i < paths.length - 1; i++) {
-            findNode = findNode.getNode(paths[i]);
-        }
-        return findNode;
-    }
-
-
-    public String getNameByDto(FileDto dto) {
-        return dto.getPath().substring(dto.getPath().lastIndexOf("/")).replace("/", "");
-    }
-
-    public String getNameByPath(String path) {
-        return path.substring(path.lastIndexOf("/")).replace("/", "");
     }
 
     public Map<String, Object> getNodeList(Map<String, Object> param,Session session) throws Exception {
@@ -255,6 +203,63 @@ public class DocumentService {
         return resultMap;
     }
 
+    public String downLoad(Session session, List<FileDto> fileDtos) throws RepositoryException {
+        Node root = session.getRootNode();
+
+        fileDtos.forEach(dto -> {
+            Node resourceNode = null;
+            try {
+                resourceNode = findResourceNode(root, dto);
+            } catch (RepositoryException e) {
+                e.printStackTrace();
+            }
+            try (OutputStream os = new FileOutputStream("C:\\Users\\user\\Downloads\\" + resourceNode.getName());
+                 InputStream is = JcrUtils.readFile(resourceNode);) {
+                IOUtils.copy(is, os);
+            } catch (RepositoryException e) {
+                e.printStackTrace();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+//        session.logout();
+        return "success";
+
+    }
+
+
+
+    public Node findResourceNode(Node root, FileDto dto) throws RepositoryException {
+        String[] paths = dto.getPath().substring(1).split("/");
+        Node findNode = root.getNode(paths[0]);
+        for (int i = 1; i < paths.length - 1; i++) {
+            findNode = findNode.getNode(paths[i]);
+        }
+        return findNode.getNode(paths[paths.length - 1]);
+    }
+
+    public Node findFileNode(Node root, FileDto dto) throws RepositoryException {
+        String[] paths = dto.getPath().substring(1).split("/");
+        Node findNode = root.getNode(paths[0]);
+        for (int i = 1; i < paths.length - 1; i++) {
+            findNode = findNode.getNode(paths[i]);
+        }
+        return findNode;
+    }
+
+
+    public String getNameByDto(FileDto dto) {
+        return dto.getPath().substring(dto.getPath().lastIndexOf("/")).replace("/", "");
+    }
+
+    public String getNameByPath(String path) {
+        return path.substring(path.lastIndexOf("/")).replace("/", "");
+    }
+
+
+
 
     public boolean folderNodeAdd(Map<String, Object> param , Session session) throws Exception {
         boolean isSuccess = false;
@@ -295,10 +300,7 @@ public class DocumentService {
             String fileBaseName = FilenameUtils.getBaseName(fileName);
             try {
                 //일반 파일 업로드
-                File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) uploadDir.mkdirs();
                 File temp = new File(fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
-
                 //노드 접근
                 Node root = session.getRootNode();
                 Node targetNode = root;
@@ -317,8 +319,6 @@ public class DocumentService {
                     resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
                     resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
                     resNode.setProperty(Property.JCR_DATA, file.getInputStream());
-
-                    file.transferTo(temp);
 
                     //데이터스토어 레코드추가
                     FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
