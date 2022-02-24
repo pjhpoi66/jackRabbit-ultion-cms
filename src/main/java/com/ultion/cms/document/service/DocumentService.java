@@ -33,12 +33,8 @@ public class DocumentService {
     @org.springframework.beans.factory.annotation.Value("${jcr.rep.home}")
     private String jcrHome;
 
-    public Map<String, Object> indexPageLoad() throws Exception {
+    public Map<String, Object> indexPageLoad(Session session) throws Exception {
         Map<String, Object> result = new HashMap<>();
-
-        Repository repository = JcrUtils.getRepository();
-        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
-
         try {
             Node root = session.getRootNode();
             NodeIterator dep1 = root.getNodes();
@@ -74,9 +70,7 @@ public class DocumentService {
 
                             if (dep2Node.isNodeType("nt:folder"))
                                 dep2NodeList.add(dep2NodeMap);
-
                         }
-
                         dep1NodeMap.put("children", dep2NodeList);
                         dep1NodeMap.put("hasChild", true);
                     }
@@ -98,8 +92,7 @@ public class DocumentService {
             pagination.setPageSize(pageSize);
             pagination.setPageNo(1);
             pagination.setTotalCount(rootChildListSize);
-
-
+            
             int count = 0;
             if (rootChildListSize > pageSize) {
                 List<FileDto> newChildList = new ArrayList<>();
@@ -121,14 +114,13 @@ public class DocumentService {
             Map<String, Object> fileMap = new HashMap<>();
             fileMap.put("fileList", rootChildList);
             fileMap.put("pagingMap", pagingMap);
-
             result.put("fileMap", fileMap);
 
             session.save();
         } finally {
-            session.logout();
-        }
 
+//            session.logout();
+        }
         return result;
     }
 
@@ -153,7 +145,7 @@ public class DocumentService {
                 e.printStackTrace();
             }
         });
-
+//        session.logout();
         return "success";
 
     }
@@ -176,6 +168,7 @@ public class DocumentService {
         return findNode;
     }
 
+
     public String getNameByDto(FileDto dto) {
         return dto.getPath().substring(dto.getPath().lastIndexOf("/")).replace("/", "");
     }
@@ -184,14 +177,10 @@ public class DocumentService {
         return path.substring(path.lastIndexOf("/")).replace("/", "");
     }
 
-    public Map<String, Object> getNodeList(Map<String, Object> param) throws Exception {
+    public Map<String, Object> getNodeList(Map<String, Object> param,Session session) throws Exception {
 
-        Repository repository = JcrUtils.getRepository();
-        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
         Map<String, Object> resultMap = new HashMap<>();
-
         int depth = Integer.parseInt(param.get("depth").toString());
-
         String targetString = param.get("target").toString();
         String[] targetArr = targetString.split("/");
 
@@ -203,7 +192,6 @@ public class DocumentService {
                     node = node.getNode(targetArr[i]);
                 }
             }
-
             NodeIterator fileNodes = node.getNodes();
 
             while (fileNodes.hasNext()) {
@@ -213,6 +201,7 @@ public class DocumentService {
                     FileDto fileDto = new FileDto();
                     fileDto.setName(fileNode.getName());
                     fileDto.setPath(fileNode.getPath());
+
 
                     if (fileNode.isNodeType(("nt:file"))) {
                         Node res = fileNode.getNode(Property.JCR_CONTENT);
@@ -224,14 +213,12 @@ public class DocumentService {
                         fileDto.setLastUpdate("");
                         fileDto.setContentType(FileType.FOLDER.getValue());
                     }
-
                     fileList.add(fileDto);
-
                 }
             }
 
         } finally {
-            session.logout();
+//            session.logout();
         }
 
         int rootChildListSize = fileList.size();
@@ -249,7 +236,6 @@ public class DocumentService {
             while (count < pageSize) { //페이지 사이즈만큼
                 int sum = count + rowNum;
                 if(sum < rootChildListSize){
-
                     FileDto fileDto = fileList.get(sum);
                     newChildList.add(fileDto);
                 }
@@ -264,15 +250,13 @@ public class DocumentService {
         pagingMap.put("prevPageNo", pagination.getPrevPageNo());
         pagingMap.put("nextPageNo", pagination.getNextPageNo());
         pagingMap.put("finalPageNo", pagination.getFinalPageNo());
-
         resultMap.put("pagingMap", pagingMap);
         resultMap.put("fileList", fileList);
-
         return resultMap;
     }
 
 
-    public boolean folderNodeAdd(Map<String, Object> param) throws Exception {
+    public boolean folderNodeAdd(Map<String, Object> param , Session session) throws Exception {
         boolean isSuccess = false;
         String nodeName = param.get("nodeName").toString();
         String nodeType = "nt:folder";
@@ -280,10 +264,6 @@ public class DocumentService {
         nodePath = nodePath.replaceAll("//ROOT/", "");
 
         System.out.println("노드패스 : " + nodePath);
-
-        Repository repository = JcrUtils.getRepository();
-        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
-
         try {
             Node root = session.getRootNode();
             System.out.println("노패 : " + nodePath);
@@ -292,12 +272,12 @@ public class DocumentService {
             } else {
                 root.addNode(nodePath + "/" + nodeName, nodeType);
             }
-
             isSuccess = true;
             session.save();
-            session.logout();
         } catch (Exception e) {
             e.printStackTrace();
+        }finally {
+//            session.logout();
         }
         return isSuccess;
     }
@@ -306,12 +286,13 @@ public class DocumentService {
         boolean resultAdd = false;
         nodePath = nodePath.replaceAll("//ROOT/", "");
         List<MultipartFile> files = request.getFiles("file");
+        Repository repository = JcrUtils.getRepository();
+        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
 
         for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
             String fileExt = FilenameUtils.getExtension(fileName);
             String fileBaseName = FilenameUtils.getBaseName(fileName);
-
             try {
                 //일반 파일 업로드
                 File uploadDir = new File(uploadPath);
@@ -319,75 +300,71 @@ public class DocumentService {
                 File temp = new File(fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
 
                 //노드 접근
-                Repository repository = JcrUtils.getRepository();
-                Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
-
                 Node root = session.getRootNode();
                 Node targetNode = root;
                 System.out.println(nodePath);
                 if (!nodePath.equals("")) {
                     targetNode = root.getNode(nodePath);
                 }
-                Node fileNode = targetNode.addNode(file.getOriginalFilename(), NodeType.NT_FILE);
-                Node resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
 
-                resNode.setProperty(Property.JCR_MIMETYPE, NodeType.NT_FILE);
-                Calendar time = Calendar.getInstance();
-                DateValue dv = new DateValue(time);
-                resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
-                resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
-                resNode.setProperty(Property.JCR_DATA, file.getInputStream());
+                if (JcrUtils.getNodeIfExists(targetNode, file.getOriginalFilename()) == null) {
+                    Node fileNode = targetNode.addNode(file.getOriginalFilename(), NodeType.NT_FILE);
+                    Node resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
 
-                file.transferTo(temp);
+                    resNode.setProperty(Property.JCR_MIMETYPE, NodeType.NT_FILE);
+                    Calendar time = Calendar.getInstance();
+                    DateValue dv = new DateValue(time);
+                    resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
+                    resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
+                    resNode.setProperty(Property.JCR_DATA, file.getInputStream());
 
-                //데이터스토어 레코드추가
-                FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
-                DataStore dataStore = new FileDataStore();
-                dataStore.init(jcrHome);
-                dataStore.addRecord(is);
+                    file.transferTo(temp);
 
-                session.save();
-                session.logout();
+                    //데이터스토어 레코드추가
+                    FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
+                    DataStore dataStore = new FileDataStore();
+                    dataStore.init(jcrHome);
+                    dataStore.addRecord(is);
+                    session.save();
+                }
+
 
                 resultAdd = true;
             } catch (IOException e) {
                 System.out.println("upload fail:" + file.getName());
                 e.printStackTrace();
                 log.debug(e.getMessage());
+            }finally {
             }
             System.out.println("upload success:" + uploadPath + "/" + file.getOriginalFilename());
         }
-
+//        session.logout();
         return resultAdd;
     }
 
 
     //노드 삭제
-    public boolean deleteNode(Map<String, Object> param) {
+    public boolean deleteNode(Map<String, Object> param ,Session session) {
         boolean isSuccess = false;
         String nodePath = param.get("nodePath").toString();
         nodePath = nodePath.replaceAll("//ROOT/", "");
         try {
-            Repository repository = JcrUtils.getRepository();
-            Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
-
             Node root = session.getRootNode();
             Node targetNode = root.getNode(nodePath);
-
             targetNode.remove();
             session.save();
-            session.logout();
-
+//            session.logout();
             isSuccess = true;
         } catch (Exception e) {
             log.debug(e.getMessage());
         }
-
         return isSuccess;
     }
 
     public void reNamingFile(Node node, String newName) throws RepositoryException {
-        node.getSession().move(node.getPath(), node.getParent().getPath() + "/" + newName);
+        node.getSession().move(node.getPath(), node.getParent().getPath()  + newName);
+        node.getSession().save();
+//        node.getSession().logout();
     }
 
 }

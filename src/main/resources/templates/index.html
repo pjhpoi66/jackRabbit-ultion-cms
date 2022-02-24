@@ -64,9 +64,12 @@
         </div>
         <div class="header-member">
             <div class="user">
-                <p>User ID</p>
+                <p>Add Folder</p>
                 <input type="text" id="inPutNodeName">
                 <button type="button" class="btn-basic" id="btnAddFolder"><span>AddFolder</span></button>
+                <p>Re Name</p>
+                <input type="text" id="nodeReNameValue">
+                <button type="button" class="btn-basic" id="btnReNamingNode"><span>NodeReNaming</span></button>
                 <button type="button" class="btn-basic" id="btnDeleteFolder"><span>DeleteFolder</span></button>
             </div>
         </div>
@@ -94,18 +97,19 @@
                                     <span class="file-path">//ROOT</span>
                                 </td>
                                 <form action="/upload" method="post" id="uploadForm" enctype="multipart/form-data">
-                                <div class="form-group row">
-                                    <label for="inputFile" class="col-sm-2 col-form-label"><strong>첨부 파일</strong></label>
-                                    <div class="col-sm-10">
-                                        <div class="custom-file" id="inputFile">
-                                            <input name="file" type="file" class="custom-file-input" id="customFile"
-                                                   multiple="multiple">
-                                            <input type="hidden" name="nodePath" id="nodePath">
-                                            <label class="custom-file-label" for="customFile">파일을 선택해 주세요.</label>
+                                    <div class="form-group row">
+                                        <label for="inputFile" class="col-sm-2 col-form-label"><strong>첨부
+                                            파일</strong></label>
+                                        <div class="col-sm-10">
+                                            <div class="custom-file" id="inputFile">
+                                                <input name="file" type="file" class="custom-file-input" id="customFile"
+                                                       multiple="multiple">
+                                                <input type="hidden" name="nodePath" id="nodePath">
+                                                <label class="custom-file-label" for="customFile">파일을 선택해 주세요.</label>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            </form>
+                                </form>
                             </tr>
                             </tbody>
                         </table>
@@ -171,9 +175,12 @@
 
         fetch("/download", {
             method: 'POST',
-            headers: {'Accept': 'application/json',
-                'Content-Type': 'application/json;charset=utf-8'},
-            body: JSON.stringify(data)}).then(response => response.json())
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(data)
+        }).then(response => response.json())
             .then(json => {
                 if (json['result'] === 'success') {
                     alert('성공');
@@ -182,26 +189,10 @@
                     console.log(json['result']);
                 }
             }).catch(e => alert('다운실패'));
-
-      /*  $.ajax({
-            url: '/download',
-            processData: false,
-            contentType: 'application/json',
-            dataType: 'JSON',
-            data: JSON.stringify(data),
-            type: 'POST',
-            success: function (result) {
-                if (result.result === 'success') {
-                    alert('다운완료');
-                } else alert('다운실패');
-            },
-            error: function (request, status, error) {
-                console.log(error);
-            }
-        });*/
     });
 
-   /* $(document).on('click', '.multi-down', function () {
+
+    $(document).on('click', '.multi-down', function () {
         let list = [];
         let downLoadCount = 0;
         $('.file-list-body').find('.chk-file:checked').each(function () {
@@ -229,12 +220,12 @@
                 console.log(error);
             }
         });
-    });*/
+    });
 
 
     function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
         let nodePath = treeNode;
-        if(treeId != 'click')
+        if (treeId != 'click')
             nodePath = treeNode.nodePath;
 
         const strLength = nodePath.length;
@@ -291,6 +282,30 @@
         });
     });
 
+    //노드 이름 변경
+    $('#btnReNamingNode').off('click').on('click', function () {
+        let reName = document.getElementById('nodeReNameValue').value;
+        let filePath = $('.file-path').text();
+
+        const data = {};
+
+        data.path = filePath;
+        data.reName = reName;
+
+        console.log(data);
+
+        fetch("/reName", {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(data)
+        }).then(() => alert("이름 변경"))
+            .catch(e => alert(e));
+    });
+
+
     //폴더추가
     $('#btnAddFolder').off('click').on('click', function () {
         const param = {};
@@ -346,7 +361,7 @@
 
         $('#page-no').val(pageNo);
 
-        if(target == null && depth == null){
+        if (target == null && depth == null) {
             target = $('#node-path').val();
             depth = $('#node-depth').val();
         }
