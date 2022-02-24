@@ -125,7 +125,7 @@ public class DocumentService {
         return result;
     }
 
-    public Map<String, Object> getNodeList(Map<String, Object> param,Session session) throws Exception {
+    public Map<String, Object> getNodeList(Map<String, Object> param, Session session) throws Exception {
 
         Map<String, Object> resultMap = new HashMap<>();
         int depth = Integer.parseInt(param.get("depth").toString());
@@ -183,7 +183,7 @@ public class DocumentService {
             List<FileDto> newChildList = new ArrayList<>();
             while (count < pageSize) { //페이지 사이즈만큼
                 int sum = count + rowNum;
-                if(sum < rootChildListSize){
+                if (sum < rootChildListSize) {
                     FileDto fileDto = fileList.get(sum);
                     newChildList.add(fileDto);
                 }
@@ -230,7 +230,6 @@ public class DocumentService {
     }
 
 
-
     public Node findResourceNode(Node root, FileDto dto) throws RepositoryException {
         String[] paths = dto.getPath().substring(1).split("/");
         Node findNode = root.getNode(paths[0]);
@@ -259,9 +258,7 @@ public class DocumentService {
     }
 
 
-
-
-    public boolean folderNodeAdd(Map<String, Object> param , Session session) throws Exception {
+    public boolean folderNodeAdd(Map<String, Object> param, Session session) throws Exception {
         boolean isSuccess = false;
         String nodeName = param.get("nodeName").toString();
         String nodeType = "nt:folder";
@@ -281,18 +278,16 @@ public class DocumentService {
             session.save();
         } catch (Exception e) {
             e.printStackTrace();
-        }finally {
+        } finally {
 //            session.logout();
         }
         return isSuccess;
     }
 
-    public boolean upload(String nodePath, MultipartHttpServletRequest request) throws Exception {
+    public boolean upload(String nodePath, MultipartHttpServletRequest request, Session session) throws Exception {
         boolean resultAdd = false;
         nodePath = nodePath.replaceAll("//ROOT/", "");
         List<MultipartFile> files = request.getFiles("file");
-        Repository repository = JcrUtils.getRepository();
-        Session session = repository.login(new SimpleCredentials("admin", "admin".toCharArray()));
 
         for (MultipartFile file : files) {
             String fileName = file.getOriginalFilename();
@@ -300,6 +295,8 @@ public class DocumentService {
             String fileBaseName = FilenameUtils.getBaseName(fileName);
             try {
                 //일반 파일 업로드
+                File uploadDir = new File(uploadPath);
+                if (!uploadDir.exists()) uploadDir.mkdirs();
                 File temp = new File(fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
                 //노드 접근
                 Node root = session.getRootNode();
@@ -309,24 +306,29 @@ public class DocumentService {
                     targetNode = root.getNode(nodePath);
                 }
 
-                if (JcrUtils.getNodeIfExists(targetNode, file.getOriginalFilename()) == null) {
-                    Node fileNode = targetNode.addNode(file.getOriginalFilename(), NodeType.NT_FILE);
-                    Node resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
-
-                    resNode.setProperty(Property.JCR_MIMETYPE, NodeType.NT_FILE);
-                    Calendar time = Calendar.getInstance();
-                    DateValue dv = new DateValue(time);
-                    resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
-                    resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
-                    resNode.setProperty(Property.JCR_DATA, file.getInputStream());
-
-                    //데이터스토어 레코드추가
-                    FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
-                    DataStore dataStore = new FileDataStore();
-                    dataStore.init(jcrHome);
-                    dataStore.addRecord(is);
-                    session.save();
+                if (JcrUtils.getNodeIfExists(targetNode, file.getOriginalFilename()) != null) {
+                    targetNode.getNode(file.getOriginalFilename()).remove();
                 }
+                Node fileNode = targetNode.addNode(file.getOriginalFilename(), NodeType.NT_FILE);
+                Node resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
+
+                resNode.setProperty(Property.JCR_MIMETYPE, NodeType.NT_FILE);
+                Calendar time = Calendar.getInstance();
+                DateValue dv = new DateValue(time);
+                resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
+                resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
+                resNode.setProperty(Property.JCR_DATA, file.getInputStream());
+
+//                if(new File())
+//                file.transferTo(temp);
+                //데이터스토어 레코드추가
+                InputStream is = JcrUtils.readFile(resNode);
+
+//                FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
+                DataStore dataStore = new FileDataStore();
+                dataStore.init(jcrHome);
+                dataStore.addRecord(is);
+                session.save();
 
 
                 resultAdd = true;
@@ -334,7 +336,8 @@ public class DocumentService {
                 System.out.println("upload fail:" + file.getName());
                 e.printStackTrace();
                 log.debug(e.getMessage());
-            }finally {
+            } finally {
+//                session.logout;
             }
             System.out.println("upload success:" + uploadPath + "/" + file.getOriginalFilename());
         }
@@ -344,7 +347,7 @@ public class DocumentService {
 
 
     //노드 삭제
-    public boolean deleteNode(Map<String, Object> param ,Session session) {
+    public boolean deleteNode(Map<String, Object> param, Session session) {
         boolean isSuccess = false;
         String nodePath = param.get("nodePath").toString();
         nodePath = nodePath.replaceAll("//ROOT/", "");
@@ -362,7 +365,7 @@ public class DocumentService {
     }
 
     public void reNamingFile(Node node, String newName) throws RepositoryException {
-        node.getSession().move(node.getPath(), node.getParent().getPath()  + newName);
+        node.getSession().move(node.getPath(), node.getParent().getPath() + newName);
         node.getSession().save();
 //        node.getSession().logout();
     }
