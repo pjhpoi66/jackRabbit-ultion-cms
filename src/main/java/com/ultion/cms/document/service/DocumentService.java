@@ -92,7 +92,7 @@ public class DocumentService {
             pagination.setPageSize(pageSize);
             pagination.setPageNo(1);
             pagination.setTotalCount(rootChildListSize);
-            
+
             int count = 0;
             if (rootChildListSize > pageSize) {
                 List<FileDto> newChildList = new ArrayList<>();
