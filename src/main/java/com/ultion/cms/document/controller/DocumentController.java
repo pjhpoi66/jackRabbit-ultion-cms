@@ -61,7 +61,7 @@ public class DocumentController {
 
     @PostMapping("/folderDelete")
     @ResponseBody
-    public Map<String, Object> delete(@RequestBody Map<String, Object> param) throws Exception {
+    public Map<String, Object> deleteNode(@RequestBody Map<String, Object> param) throws Exception {
         Map<String, Object> result = new HashMap<>();
         boolean delResult = documentService.deleteNode(param, session);
         result.put("delResult", delResult);

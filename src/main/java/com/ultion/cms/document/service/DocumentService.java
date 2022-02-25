@@ -11,8 +11,6 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
 import org.apache.jackrabbit.value.DateValue;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -150,17 +148,19 @@ public class DocumentService {
                     fileDto.setName(fileNode.getName());
                     fileDto.setPath(fileNode.getPath());
 
-
                     if (fileNode.isNodeType(("nt:file"))) {
                         Node res = fileNode.getNode(Property.JCR_CONTENT);
                         Date date = res.getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime();
                         String lastUpdate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
                         fileDto.setLastUpdate(lastUpdate);
-                        fileDto.setContentType(FileType.FILE.getValue());
+                        fileDto.setType(FileType.FILE.getValue());
                     } else {
                         fileDto.setLastUpdate("");
-                        fileDto.setContentType(FileType.FOLDER.getValue());
+                        fileDto.setType(FileType.FOLDER.getValue());
                     }
+                    String owner = fileNode.getProperty(Property.JCR_CREATED_BY).getString();
+                    fileDto.setOwner(owner);
+
                     fileList.add(fileDto);
                 }
             }
@@ -172,9 +172,9 @@ public class DocumentService {
         int rootChildListSize = fileList.size();
         Pagination pagination = new Pagination();
         final int pageSize = 5;
-        pagination.setPageSize(pageSize);
-        pagination.setPageNo(Integer.parseInt(param.get("pageNo").toString()));
-        pagination.setTotalCount(rootChildListSize);
+        pagination.setPageSize(pageSize); //한페이지에 보여줄 컨텐츠 숫자
+        pagination.setPageNo(Integer.parseInt(param.get("pageNo").toString())); //이동하려는 페이지 번호
+        pagination.setTotalCount(rootChildListSize);//총 컨텐츠 숫자
 
 
         int count = 0;

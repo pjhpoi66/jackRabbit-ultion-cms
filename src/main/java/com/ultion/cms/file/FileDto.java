@@ -16,7 +16,7 @@ public class FileDto {
     private String status;
     private String owner;
     private String lastUpdate;
-    private FileType type;
+    private String type;
 
 }
 
