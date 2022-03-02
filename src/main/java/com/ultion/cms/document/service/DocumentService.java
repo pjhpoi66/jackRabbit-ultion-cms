@@ -315,11 +315,6 @@ public class DocumentService {
                     targetNode = root.getNode(nodePath);
                 }
 
-
-                NodeTypeManager manager1 = (NodeTypeManager) session.getWorkspace().getNodeTypeManager();
-
-
-
                 if (JcrUtils.getNodeIfExists(targetNode, file.getOriginalFilename()) != null) {
                     targetNode.getNode(file.getOriginalFilename()).remove();
                 }
