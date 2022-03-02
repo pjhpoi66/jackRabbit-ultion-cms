@@ -73,7 +73,8 @@ public class CustomNode {
         custom.setFullTextSearchable(false);
         nodeType.getPropertyDefinitionTemplates().add(custom);
 
-        NodeType newnodetype = nodeTypeManager.registerNodeType(nodeType, true);
+//        NodeType newnodetype = nodeTypeManager.registerNodeType(nodeType, true);
+        nodeTypeManager.registerNodeType(nodeType, true);
         session.save();
     }
 

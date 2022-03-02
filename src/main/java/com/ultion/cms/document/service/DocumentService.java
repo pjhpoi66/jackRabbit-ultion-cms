@@ -252,9 +252,10 @@ public class DocumentService {
     }
 
     public Node findFileNode(Node root, FileDto dto) throws RepositoryException {
+
         String[] paths = dto.getPath().substring(1).split("/");
         Node findNode = root.getNode(paths[0]);
-        for (int i = 1; i < paths.length - 1; i++) {
+        for (int i = 1; i < paths.length ; i++) {
             findNode = findNode.getNode(paths[i]);
         }
         return findNode;
@@ -376,7 +377,8 @@ public class DocumentService {
     }
 
     public void reNamingFile(Node node, String newName) throws RepositoryException {
-        node.getSession().move(node.getPath(), node.getParent().getPath() + newName);
+
+        node.getSession().move(node.getPath(), node.getParent().getPath()+"/"+ newName);
         node.getSession().save();
 //        node.getSession().logout();
     }
