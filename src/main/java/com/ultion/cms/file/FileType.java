@@ -4,9 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum FileType {
-
     FILE("file") ,
     FOLDER("folder");
+
+
 
     final private String value;
 

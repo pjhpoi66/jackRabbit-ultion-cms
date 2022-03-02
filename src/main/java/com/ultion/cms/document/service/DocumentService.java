@@ -7,16 +7,19 @@ import com.ultion.cms.file.FileType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.JcrUtils;
+import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
+import org.apache.jackrabbit.core.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.value.DateValue;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
-import javax.jcr.nodetype.NodeType;
+import javax.jcr.nodetype.*;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -131,6 +134,7 @@ public class DocumentService {
         String[] targetArr = targetString.split("/");
 
         List<FileDto> fileList = new ArrayList<>();
+
         try {
             Node node = session.getRootNode();
             if (1 < depth) {
@@ -147,6 +151,7 @@ public class DocumentService {
                     FileDto fileDto = new FileDto();
                     fileDto.setName(fileNode.getName());
                     fileDto.setPath(fileNode.getPath());
+
 
                     if (fileNode.isNodeType(("nt:file"))) {
                         Node res = fileNode.getNode(Property.JCR_CONTENT);
@@ -200,11 +205,18 @@ public class DocumentService {
         pagingMap.put("finalPageNo", pagination.getFinalPageNo());
         resultMap.put("pagingMap", pagingMap);
         resultMap.put("fileList", fileList);
+
+
         return resultMap;
     }
 
-    public String downLoad(Session session, List<FileDto> fileDtos) throws RepositoryException {
+
+
+    public String downLoad(Session session, List<FileDto> fileDtos) throws Exception {
         Node root = session.getRootNode();
+
+        CustomNode.RegisterFileType(session);
+        CustomNode.showNodeTypes(session);
 
         fileDtos.forEach(dto -> {
             Node resourceNode = null;
@@ -294,10 +306,6 @@ public class DocumentService {
             String fileExt = FilenameUtils.getExtension(fileName);
             String fileBaseName = FilenameUtils.getBaseName(fileName);
             try {
-                //일반 파일 업로드
-                File uploadDir = new File(uploadPath);
-                if (!uploadDir.exists()) uploadDir.mkdirs();
-                File temp = new File(fileBaseName + "_" + DateUtil.getNowDate() + "." + fileExt);
                 //노드 접근
                 Node root = session.getRootNode();
                 Node targetNode = root;
@@ -306,11 +314,17 @@ public class DocumentService {
                     targetNode = root.getNode(nodePath);
                 }
 
+
+                NodeTypeManager manager1 = (NodeTypeManager) session.getWorkspace().getNodeTypeManager();
+
+
+
                 if (JcrUtils.getNodeIfExists(targetNode, file.getOriginalFilename()) != null) {
                     targetNode.getNode(file.getOriginalFilename()).remove();
                 }
                 Node fileNode = targetNode.addNode(file.getOriginalFilename(), NodeType.NT_FILE);
                 Node resNode = fileNode.addNode(Property.JCR_CONTENT, NodeType.NT_RESOURCE);
+
 
                 resNode.setProperty(Property.JCR_MIMETYPE, NodeType.NT_FILE);
                 Calendar time = Calendar.getInstance();
@@ -319,17 +333,14 @@ public class DocumentService {
                 resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
                 resNode.setProperty(Property.JCR_DATA, file.getInputStream());
 
-//                if(new File())
-//                file.transferTo(temp);
+                System.out.println("만든이:" + fileNode.getProperty(Property.JCR_CREATED_BY));
+
                 //데이터스토어 레코드추가
                 InputStream is = JcrUtils.readFile(resNode);
-
-//                FileInputStream is = new FileInputStream(uploadPath + "\\" + temp);
                 DataStore dataStore = new FileDataStore();
                 dataStore.init(jcrHome);
                 dataStore.addRecord(is);
                 session.save();
-
 
                 resultAdd = true;
             } catch (IOException e) {
