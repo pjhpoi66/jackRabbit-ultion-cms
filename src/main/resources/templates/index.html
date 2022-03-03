@@ -164,6 +164,33 @@
             }
         ]
 
+
+    /*    document.querySelectorAll('.chk-file').forEach(chk => {
+            const checkFiles = document.querySelectorAll('.chk-file');
+            const checkedFiles = document.querySelectorAll('.chk-file:checked');
+            if (checkFiles.length !== checkedFiles.length) {
+                checkBox.checked = false;
+            }
+        });*/
+
+    function checkListener() {
+        const checkFiles = document.querySelectorAll('.chk-file');
+        const checkedFiles = document.querySelectorAll('.chk-file:checked');
+        const checkAll = document.querySelector('.check-all');
+        if (checkFiles.length === checkedFiles.length) {
+            checkAll.checked = true;
+        } else {
+            checkAll.checked = false;
+        }
+    }
+
+    function checkAll(checkBox) {
+        const checkFiles = document.querySelectorAll('.chk-file');
+        checkFiles.forEach(checkFile => {
+            checkFile.checked = checkBox.checked;
+        });
+    }
+
     $(document).on('click', '.btnDownload', async function () {
         console.log(this.className);
         // let path = document.getElementsByClassName(this.className).parentNode.siblings('.filePath').text();
@@ -171,7 +198,7 @@
         let name = $(this).parent().siblings('.fileName').text();
         let data = {'name': name, 'path': path};
 
-        //fetch구현
+        //fetch 구현
 
         fetch("/download", {
             method: 'POST',
@@ -197,7 +224,12 @@
     function multiDown() {
         let list = [];
         let downLoadCount = 0;
-        document.querySelectorAll('.chk-file:checked').forEach(checked => {
+        const checkList = document.querySelectorAll('.chk-file:checked');
+        if (checkList.length === 0) {
+            alert('선택한 파일이없습니다');
+            return;
+        }
+        checkList.forEach(checked => {
             const parent = checked.parentElement.parentElement;
             const fileName = parent.querySelector('.fileName').innerText;
             const filePath = parent.querySelector('.filePath').innerText;
@@ -221,40 +253,8 @@
             }).catch(e => {
             alert('다운로드 실패');
             console.log(e);
-        })
-
+        });
     }
-
-    /* $(document).on('click', '.multi-down', function () {
-         let list = [];
-         let downLoadCount = 0;
-         $('.file-list-body').find('.chk-file:checked').each(function () {
-             let path = $(this).parent().siblings('.filePath').text();
-             let name = $(this).parent().siblings('.fileName').text();
-             downLoadCount++;
-             list.push({'name': name, 'path': path});
-         });
-
-         console.log(list);
-
-         $.ajax({
-             url: '/download2',
-             processData: false,
-             contentType: 'application/json',
-             dataType: 'JSON',
-             data: JSON.stringify(list),
-             type: 'POST',
-             success: function (result) {
-                 if (result.result === 'success') {
-                     alert(downLoadCount + '개 파일 다운완료');
-                 } else alert('다운실패');
-             },
-             error: function (request, status, error) {
-                 console.log(error);
-             }
-         });
-     });
- */
 
     function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
         let nodePath = treeNode;
@@ -292,7 +292,17 @@
     $('#btnUpload').on('click', function () {
         const form = $('#uploadForm')[0];
         const data = new FormData(form);
-
+        const filesLength = document.getElementById('customFile').files.length;
+        const filePath = document.querySelector('.file-path').innerText;
+        console.log('파일패스' + filePath);
+        if (filePath === '//ROOT') {
+            alert('업로드할 폴더가 지정되지 않았습니다.');
+            return;
+        }
+        if (!filesLength) {
+            alert('선택된 파일이없습니다');
+            return;
+        }
         $.ajax({
             url: '/upload',
             processData: false,
@@ -300,19 +310,17 @@
             data: data,
             type: 'POST',
             success: function (result) {
-
                 if (result.resultAdd) {
-                    alert('업로드성공');
+                    alert(filesLength + '개 파일 업로드성공');
                 } else {
                     alert('업로드실패');
                 }
-
             },
             error: function (request, status, error) {
-
                 console.log(error);
             }
         });
+
     });
 
     //노드 이름 변경
