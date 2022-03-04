@@ -148,7 +148,8 @@
     let zTreeObj,
         setting = {
             view: {
-                selectedMulti: false
+                selectedMulti: false,
+                dblClickExpand: true
             },
             callback: {
                 onClick: onClick
@@ -164,14 +165,6 @@
             }
         ]
 
-
-    /*    document.querySelectorAll('.chk-file').forEach(chk => {
-            const checkFiles = document.querySelectorAll('.chk-file');
-            const checkedFiles = document.querySelectorAll('.chk-file:checked');
-            if (checkFiles.length !== checkedFiles.length) {
-                checkBox.checked = false;
-            }
-        });*/
 
     function checkListener() {
         const checkFiles = document.querySelectorAll('.chk-file');
@@ -191,14 +184,11 @@
         });
     }
 
-    $(document).on('click', '.btnDownload', async function () {
-        console.log(this.className);
-        // let path = document.getElementsByClassName(this.className).parentNode.siblings('.filePath').text();
-        let path = $(this).parent().siblings('.filePath').text();
-        let name = $(this).parent().siblings('.fileName').text();
-        let data = {'name': name, 'path': path};
-
-        //fetch 구현
+    function oneFileDown(button) {
+        const root = button.parentElement.parentElement;
+        const name = root.querySelector('.fileName').innerText;
+        const path = root.querySelector('.filePath').innerText;
+        const data = {'name': name, 'path': path};
 
         fetch("/download", {
             method: 'POST',
@@ -219,7 +209,7 @@
             alert('다운로드 실패');
             console.log(e);
         });
-    });
+    };
 
     function multiDown() {
         let list = [];
@@ -256,19 +246,33 @@
         });
     }
 
+    onClick('', 'click', ''); //페이지 열면 바로 루트로 들어가게
+
     function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
         let nodePath = treeNode;
-        if (treeId != 'click')
+        if (treeId !== 'click')
             nodePath = treeNode.nodePath;
 
         const strLength = nodePath.length;
         nodePath = nodePath.substr(1, strLength - 1);
-        $('.file-path').text('//ROOT/' + nodePath);
-
+        document.querySelector('.file-path').innerText = '//ROOT/' + nodePath;
         const param = {};
         param.target = nodePath;
         let nodePathArr = nodePath.split("/");
         let nodePathLen = nodePathArr.length;
+
+        //이코드는 처음에 페이지부를 때 Root 를 하이라이팅 하기 위한 코드입니다
+        //아래 함수는 페이지가 그려진후 할행동을 정의합니다
+        //페이지가 그려진후에는 루트부터 tree_1_a ,tree_1_b 이런식으로 트리 아이디가 생성됩니다
+        //하이라팅 방법은 className 에 curSelectedNode 를 붙이는것입니다. curSelectedNode 앞에 공백 중요
+        if (document.querySelector('.file-path').innerText === '//ROOT/') {
+            window.addEventListener('DOMContentLoaded', function () {
+                document.querySelector('#tree_1_a').className = 'level0 curSelectedNode';
+            });
+        }else {
+            document.querySelector('#tree_1_a').className = 'level0';
+        }
+
 
         if (1 === nodePathLen && nodePath === '')
             param.depth = 1;
@@ -276,26 +280,33 @@
             param.depth = 2;
         else
             param.depth = 3;
+        document.getElementById('node-path').value = nodePath;
+        document.getElementById('node-depth').value = param.depth;
 
-        $('#node-path').val(nodePath);
-        $('#node-depth').val(param.depth);
+        /*        $('#node-path').val(nodePath);
+                $('#node-depth').val(param.depth);*/
 
         movePage(1, nodePath, param.depth);
 
     }
 
-    $(document).ready(function () {
+    //zTree 그리기
+    const ready = (callback) => {
+        if (document.readyState !== 'loading') callback;
+        else document.addEventListener('DOMContentLoaded', callback);
+    }
+    ready(() => {
+        // document.querySelector('fn.zTree').init(document.getElementById('tree'), setting, zTreeNodes);
         zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
     });
 
     //업로드
-    $('#btnUpload').on('click', function () {
-        const form = $('#uploadForm')[0];
+    document.getElementById('btnUpload').addEventListener('click', function () {
+        const form = document.getElementById('uploadForm');
         const data = new FormData(form);
-        const filesLength = document.getElementById('customFile').files.length;
-        const filePath = document.querySelector('.file-path').innerText;
-        console.log('파일패스' + filePath);
-        if (filePath === '//ROOT') {
+        const filesLength = document.getElementById('customFile').files.length; //0개 파일 올리기 방지
+        const folderPath = document.querySelector('.file-path').innerText; // 폴더선택안하기 방지
+        if (folderPath === '//ROOT') {
             alert('업로드할 폴더가 지정되지 않았습니다.');
             return;
         }
@@ -303,38 +314,33 @@
             alert('선택된 파일이없습니다');
             return;
         }
-        $.ajax({
-            url: '/upload',
-            processData: false,
-            contentType: false,
-            data: data,
-            type: 'POST',
-            success: function (result) {
-                if (result.resultAdd) {
-                    alert(filesLength + '개 파일 업로드성공');
+
+        fetch('/upload', {
+            method: 'POST',
+            headers: {},//업로드 헤더에 값이 있을경우 오히려 에러발생
+            body: data
+        }).then(response => response.json())
+            .then(json => {
+                if (json['resultAdd']) {
+                    alert(filesLength + '개 파일 업로드 성공!');
                 } else {
+                    console.log(json);
                     alert('업로드실패');
                 }
-            },
-            error: function (request, status, error) {
-                console.log(error);
-            }
+            }).catch(e => {
+            console.log(e);
         });
-
     });
 
     //노드 이름 변경
-    $('#btnReNamingNode').off('click').on('click', function () {
-        let reName = document.getElementById('nodeReNameValue').value;
-        let filePath = $('.file-path').text();
-
+    document.getElementById('btnReNamingNode').addEventListener('click', function () {
+        const reName = document.getElementById('nodeReNameValue').value;
+        const filePath = document.querySelector('.file-path').innerText; //파일 패스가 부모 경로이므로 /<<이것을 추가해줌
+        console.log(filePath);
+        console.log(reName);
         const data = {};
-
         data.path = filePath;
         data.reName = reName;
-
-        console.log(data);
-
         fetch("/reName", {
             method: 'POST',
             headers: {
@@ -346,69 +352,54 @@
             .catch(e => alert(e));
     });
 
-
     //폴더추가
-    $('#btnAddFolder').off('click').on('click', function () {
+    document.getElementById('btnAddFolder').addEventListener('click', function () {
         const param = {};
-        let path = $('.file-path').text();
+        param.nodePath = document.querySelector('.file-path').innerText;
+        param.nodeName = document.getElementById('inPutNodeName').value;
 
-        param.nodePath = path;
-        param.nodeName = $('#inPutNodeName').val();
-
-        $.ajax({
-            url: '/folderAdd',
-            processData: false,
-            contentType: 'application/json',
-            dataType: 'JSON',
-            data: JSON.stringify(param),
-            type: 'POST',
-            success: function (result) {
-                if (result.resultAdd) {
-                    alert('폴더추가성공');
-
-                } else alert('폴더추가실패');
+        fetch('/folderAdd', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
             },
-            error: function (request, status, error) {
-                console.log(error);
-            }
-        });
+            body: JSON.stringify(param)
+        }).then(response => response.json())
+            .then(json => {
+                if (json['resultAdd']) alert(param.nodeName + '폴더 추가');
+                else alert('폴더 추가실패');
+            }).catch(e => console.log(e));
     });
 
-    $('#btnDeleteFolder').on('click', function () {
+    //삭제기능
+    document.querySelector('#btnDeleteFolder').addEventListener('click', function () {
         const param = {};
-        let path = $('.file-path').text();
-
-        param.nodePath = path;
-
-        $.ajax({
-            url: '/folderDelete',
-            processData: false,
-            contentType: 'application/json',
-            dataType: 'JSON',
-            data: JSON.stringify(param),
-            type: 'POST',
-            success: function (result) {
-                if (result.delResult) alert('폴더삭제성공');
-                else alert('폴더삭제실패');
+        param.nodePath = document.querySelector('.file-path').innerText;
+        const fileName = param.nodePath.substring(param.nodePath.lastIndexOf('/') + 1);
+        fetch('/folderDelete', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
             },
-            error: function (request, status, error) {
-                console.log(error);
-            }
-        });
+            body: JSON.stringify(param)
+        }).then(response => response.json())
+            .then(json => {
+                if (json['delResult']) alert(fileName + '을 삭제 하였습니다');
+                else alert(fileName + '을 삭제하는데 실패하였습니다');
+            }).catch(e => console.log(e));
     });
 
     //페이징
     function movePage(pageNo, target, depth) {
-
-        $('#page-no').val(pageNo);
-
+        document.getElementById('page-no').value = pageNo;
         if (target == null && depth == null) {
-            target = $('#node-path').val();
-            depth = $('#node-depth').val();
+            target = document.getElementById('node-path').value;
+            depth = document.getElementById('node-depth').value;
         }
 
         const paramData = dataBind(pageNo, target, depth);
-
         $.ajax({
             type: 'POST',
             url: '/nodeList',
@@ -417,15 +408,23 @@
             traditional: true,
             cache: false,
         }).done(function (data) {
-            $('.table-data').remove();
-            $('.pagination-wrap').remove();
-
-            $('.file-list').append(data);
-
+            document.querySelector('.table-data').remove();
+            document.querySelector('.pagination-wrap').remove();
+            let fileList = document.querySelector('.file-list');
+            appendHtml(fileList, data);
+            // $('.file-list').append(data);
         }).fail(function (request, error) {
             console.log(request.responseText);
             console.log('로딩 실패');
         });
+    }
+
+    function appendHtml(el, str) {
+        let div = document.createElement('div');
+        div.innerHTML = str;
+        while (div.children.length > 0) {
+            el.appendChild(div.children[0]);
+        }
     }
 
     function dataBind(pageNo, target, depth) {

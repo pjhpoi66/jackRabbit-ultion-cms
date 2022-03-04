@@ -372,8 +372,9 @@ public class DocumentService {
     }
 
     public void reNamingFile(Node node, String newName) throws RepositoryException {
-
-        node.getSession().move(node.getPath(), node.getParent().getPath()+"/"+ newName);
+        final String parentPath = node.getParent().getPath();
+        final String path = parentPath.substring(parentPath.length() - 1).equals("/") ? parentPath : parentPath + "/";
+        node.getSession().move(node.getPath(), path+ newName);
         node.getSession().save();
 //        node.getSession().logout();
     }

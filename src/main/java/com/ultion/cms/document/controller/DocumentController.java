@@ -44,6 +44,9 @@ public class DocumentController {
     @PostMapping("/upload")
     @ResponseBody
     public Map<String, Object> fileUpload(@RequestParam("nodePath") String nodePath, MultipartHttpServletRequest request) throws Exception {
+
+        System.out.println("브레이크 포인트");
+
         boolean resultAdd = documentService.upload(nodePath, request,session);
         Map<String, Object> result = new HashMap<>();
         result.put("resultAdd", resultAdd);
