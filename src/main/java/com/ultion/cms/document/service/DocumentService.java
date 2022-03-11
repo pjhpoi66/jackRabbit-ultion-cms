@@ -2,9 +2,12 @@ package com.ultion.cms.document.service;
 
 import com.ultion.cms.core.util.DateUtil;
 import com.ultion.cms.core.web.Pagination;
+import com.ultion.cms.file.FileCharsetService;
 import com.ultion.cms.file.FileDto;
 import com.ultion.cms.file.FileType;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
@@ -15,24 +18,32 @@ import org.apache.jackrabbit.core.data.FileDataStore;
 import org.apache.jackrabbit.core.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.value.DateValue;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
 import javax.jcr.nodetype.*;
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.nio.charset.StandardCharsets;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class DocumentService {
 
     @org.springframework.beans.factory.annotation.Value("${upload.path}")
     private String uploadPath;
     @org.springframework.beans.factory.annotation.Value("${jcr.rep.home}")
     private String jcrHome;
+    private final FileCharsetService fileCharsetService;
+
 
     public Map<String, Object> indexPageLoad(Session session) throws Exception {
         Map<String, Object> result = new HashMap<>();
@@ -211,12 +222,8 @@ public class DocumentService {
     }
 
 
-
-    public String downLoad(Session session, List<FileDto> fileDtos) throws Exception {
+    public String downLoad(HttpServletRequest request, HttpServletResponse response, Session session,  List<FileDto> fileDtos) throws Exception {
         Node root = session.getRootNode();
-
-        CustomNode.RegisterFileType(session);
-        CustomNode.showNodeTypes(session);
 
         fileDtos.forEach(dto -> {
             Node resourceNode = null;
@@ -225,14 +232,28 @@ public class DocumentService {
             } catch (RepositoryException e) {
                 e.printStackTrace();
             }
-            try (OutputStream os = new FileOutputStream("C:\\Users\\user\\Downloads\\" + resourceNode.getName());
+            try (OutputStream os = response.getOutputStream();
                  InputStream is = JcrUtils.readFile(resourceNode);) {
-                IOUtils.copy(is, os);
-            } catch (RepositoryException e) {
-                e.printStackTrace();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
+
+
+                File copyFile = new File(dto.getName());
+                FileUtils.copyInputStreamToFile(is, copyFile);
+                FileInputStream fis = new FileInputStream(copyFile);
+                response.setHeader("Content-Description", "file download");
+                response.setHeader("Content-Disposition", "attachment; filename=\""+dto.getName()+";charset=utf-8;");
+                response.setHeader("Content-Transfer-Encoding", "binary");
+
+
+                response.setContentType("application/octet-stream");
+                response.setContentLength((int) copyFile.length());
+
+                int read = 0;
+                byte[] buffer = new byte[1024];
+                while ((read = fis.read(buffer)) != -1) { // 1024바이트씩 계속 읽으면서 outputStream에 저장, -1이 나오면 더이상 읽을 파일이 없음
+                    os.write(buffer, 0, read);
+                }
+                fis.close();
+            } catch (RepositoryException | IOException e) {
                 e.printStackTrace();
             }
         });
@@ -255,7 +276,7 @@ public class DocumentService {
 
         String[] paths = dto.getPath().substring(1).split("/");
         Node findNode = root.getNode(paths[0]);
-        for (int i = 1; i < paths.length ; i++) {
+        for (int i = 1; i < paths.length; i++) {
             findNode = findNode.getNode(paths[i]);
         }
         return findNode;
@@ -374,7 +395,7 @@ public class DocumentService {
     public void reNamingFile(Node node, String newName) throws RepositoryException {
         final String parentPath = node.getParent().getPath();
         final String path = parentPath.substring(parentPath.length() - 1).equals("/") ? parentPath : parentPath + "/";
-        node.getSession().move(node.getPath(), path+ newName);
+        node.getSession().move(node.getPath(), path + newName);
         node.getSession().save();
 //        node.getSession().logout();
     }

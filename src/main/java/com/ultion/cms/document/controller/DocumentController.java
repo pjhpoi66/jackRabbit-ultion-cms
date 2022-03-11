@@ -1,17 +1,27 @@
 package com.ultion.cms.document.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ultion.cms.document.service.DocumentService;
-import com.ultion.cms.document.service.ThirdHop;
-import com.ultion.cms.document.service.UploadTestService;
 import com.ultion.cms.file.FileDto;
+import com.ultion.cms.file.FileListDto;
+import com.ultion.cms.test.TestDto;
+import com.ultion.cms.test.TestListDto;
 import lombok.RequiredArgsConstructor;
-import org.apache.jackrabbit.commons.JcrUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.jcr.*;
+import javax.jcr.Node;
+import javax.jcr.RepositoryException;
+import javax.jcr.Session;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.FormParam;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,9 +31,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DocumentController {
 
-    private final ThirdHop thirdHop;
     private final DocumentService documentService;
-    private final Repository repository;
     private final Session session;
     private final Node root;
 
@@ -37,17 +45,14 @@ public class DocumentController {
     @ResponseBody
     public ModelAndView getNodeList(@RequestBody Map<String, Object> param) throws Exception {
         Map<String, Object> resultMap = documentService.indexPageLoad(session);
-        resultMap.put("fileMap", documentService.getNodeList(param,session));
+        resultMap.put("fileMap", documentService.getNodeList(param, session));
         return new ModelAndView("index-content", resultMap);
     }
 
     @PostMapping("/upload")
     @ResponseBody
     public Map<String, Object> fileUpload(@RequestParam("nodePath") String nodePath, MultipartHttpServletRequest request) throws Exception {
-
-        System.out.println("브레이크 포인트");
-
-        boolean resultAdd = documentService.upload(nodePath, request,session);
+        boolean resultAdd = documentService.upload(nodePath, request, session);
         Map<String, Object> result = new HashMap<>();
         result.put("resultAdd", resultAdd);
         return result;
@@ -76,12 +81,10 @@ public class DocumentController {
      */
     @PostMapping("/download")
     @ResponseBody
-    public Map<String, String> down2(@RequestBody FileDto fileDto) throws Exception {
+    public void down2(HttpServletRequest request, HttpServletResponse response,  FileDto fileDto) throws Exception {
         List<FileDto> fileDtos = new ArrayList<>();
         fileDtos.add(fileDto);
-        Map<String, String> resultMap = new HashMap<>();
-        resultMap.put("result", documentService.downLoad(session, fileDtos));
-        return resultMap;
+        documentService.downLoad(request, response, session, fileDtos);
     }
 
     /**
@@ -89,10 +92,16 @@ public class DocumentController {
      */
     @PostMapping("/download2")
     @ResponseBody
-    public Map<String, String> down(@RequestBody List<FileDto> fileDtos) throws Exception {
-        Map<String, String> resultMap = new HashMap<>();
-        resultMap.put("result", documentService.downLoad(session, fileDtos));
-        return resultMap;
+    public void down(HttpServletRequest request, HttpServletResponse response,  @RequestBody List<FileDto>  fileDtos ) throws Exception {
+        documentService.downLoad(request, response, session, fileDtos);
+    }
+    @PostMapping("/download3")
+    @ResponseBody
+    public void test(HttpServletRequest request, HttpServletResponse response, @RequestBody List<FileDto> fileDtos ) throws Exception {
+
+        System.out.println(fileDtos);
+        System.out.println("브레이크 포인트");
+//        documentService.downLoad(request, response, session, dtos.getDtos());
     }
 
     @PostMapping("/reName")

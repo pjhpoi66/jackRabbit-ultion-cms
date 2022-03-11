@@ -31,20 +31,16 @@
                 <a href="#">File</a>
                 <ul class="sub-menu" id="fileMenu">
                     <li>
-                        <a href="#" class="multi-down" onclick="
-                        multiDown()"><span>선택한 파일 다운</span></a>
+                        <a href="#" class="multi-down" onclick="multiDown()"><span>Multi Download</span></a>
                     </li>
                     <li>
-                        <a href="#" class="delete-folder" onclick="deleteFolder()"><span>현재 폴더 삭제</span></a>
+                        <a href="#" class="delete-folder" onclick="deleteFolder()"><span>폴더삭제</span></a>
                     </li>
                     <li>
-                        <a href="#" onclick="addFolder()"><span>폴더 추가</span></a>
+                        <a href="#"><span>submenu</span></a>
                     </li>
                     <li>
-                        <a href="#" onclick="reNaming()"><span>이름 변경</span></a>
-                    </li>
-                    <li>
-                        <a href="#" id="fileUpload"><span>파일 업로드</span></a>
+                        <a href="#"><span>submenu</span></a>
                     </li>
                 </ul>
             </div>
@@ -68,7 +64,13 @@
         </div>
         <div class="header-member">
             <div class="user">
-
+                <p>Add Folder</p>
+                <input type="text" id="inPutNodeName">
+                <button type="button" class="btn-basic" id="btnAddFolder"><span>AddFolder</span></button>
+                <p>Re Name</p>
+                <input type="text" id="nodeReNameValue">
+                <button type="button" class="btn-basic" id="btnReNamingNode"><span>NodeReNaming</span></button>
+                <button type="button" class="btn-basic" id="btnDeleteFolder"><span>DeleteFolder</span></button>
             </div>
         </div>
     </header>
@@ -95,10 +97,17 @@
                                     <span class="file-path">//ROOT</span>
                                 </td>
                                 <form action="/upload" method="post" id="uploadForm" enctype="multipart/form-data">
-                                    <div class="custom-file" id="inputFile">
-                                        <input name="file" type="file" class="custom-file-input" id="customFile"
-                                               multiple="multiple">
-                                        <input type="hidden" name="nodePath" id="nodePath">
+                                    <div class="form-group row">
+                                        <label for="inputFile" class="col-sm-2 col-form-label"><strong>첨부
+                                            파일</strong></label>
+                                        <div class="col-sm-10">
+                                            <div class="custom-file" id="inputFile">
+                                                <input name="file" type="file" class="custom-file-input" id="customFile"
+                                                       multiple="multiple">
+                                                <input type="hidden" name="nodePath" id="nodePath">
+                                                <label class="custom-file-label" for="customFile">파일을 선택해 주세요.</label>
+                                            </div>
+                                        </div>
                                     </div>
                                 </form>
                             </tr>
@@ -161,7 +170,11 @@
         const checkFiles = document.querySelectorAll('.chk-file');
         const checkedFiles = document.querySelectorAll('.chk-file:checked');
         const checkAll = document.querySelector('.check-all');
-        checkAll.checked = (checkFiles.length === checkedFiles.length); //체크가능 숫자와 체크 된숫자가 같은지 비교
+        if (checkFiles.length === checkedFiles.length) {
+            checkAll.checked = true;
+        } else {
+            checkAll.checked = false;
+        }
     }
 
     function checkAll(checkBox) {
@@ -171,96 +184,67 @@
         });
     }
 
-
-    async function download(getUrl, formData) {
-        const init = await fetch(getUrl, {
-            headers: {
-                'Accept': 'application/json',
-            },
-            body: formData,
-            method: 'post',
-        });
-        const blob = await init.blob();
-        const disposition = init.headers.get('content-disposition');
-        let fileName = 'file';
-        if (disposition && disposition.indexOf('attachment') !== -1) {
-            const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
-            const matches = filenameRegex.exec(disposition)
-            if (matches != null && matches[1]) {
-                fileName = matches[1].replace(/['"]/g, '')
-            }
-        }
-        //가짜 링크 만들기
-        const url = URL.createObjectURL(await blob)
-        const a = document.createElement("a")
-        a.href = url
-        a.download = fileName
-        document.body.appendChild(a)
-        a.click()
-        window.URL.revokeObjectURL(url)
-    }
-
-    async function oneFileDown(button) {
+    function oneFileDown(button) {
         const root = button.parentElement.parentElement;
         const name = root.querySelector('.fileName').innerText;
         const path = root.querySelector('.filePath').innerText;
-        const formData = new FormData();
-        formData.append('name', name);
-        formData.append('path', path);
-        const url = '/download';
-        await download(url, formData);
+        const data = {'name': name, 'path': path};
+
+        fetch("/download", {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(data)
+        }).then(response => response.json())
+            .then(json => {
+                if (json['result'] === 'success') {
+                    alert('성공');
+                    console.log(json['result']);
+                } else {
+                    console.log(json['result']);
+                }
+            }).catch(e => {
+            alert('다운로드 실패');
+            console.log(e);
+        });
     };
 
-    async function multiDown() {
+    function multiDown() {
+        let list = [];
+        let downLoadCount = 0;
         const checkList = document.querySelectorAll('.chk-file:checked');
-        const url = '/download2';
-        const list = [];
         if (checkList.length === 0) {
             alert('선택한 파일이없습니다');
             return;
         }
-        let idx = 0;
         checkList.forEach(checked => {
             const parent = checked.parentElement.parentElement;
-            const name = parent.querySelector('.fileName').innerText;
-            const path = parent.querySelector('.filePath').innerText;
-            const formData = new FormData();
-            formData.append('name', name);
-            formData.append('path', path);
-            const url = '/download';
-             download(url, formData);
-        });
-
-        console.log(list);
-        // await download(url, JSON.stringify(list));
-    }
-    /*async function multiDown() {
-        const checkList = document.querySelectorAll('.chk-file:checked');
-        const url = '/download2';
-        const formData = new FormData();
-        const list = [];
-        if (checkList.length === 0) {
-            alert('선택한 파일이없습니다');
-            return;
-        }
-        let idx = 0;
-        checkList.forEach(checked => {
-            const parent = checked.parentElement.parentElement;
-
             const fileName = parent.querySelector('.fileName').innerText;
             const filePath = parent.querySelector('.filePath').innerText;
+            downLoadCount++;
             list.push({'name': fileName, 'path': filePath});
-            // const nowDto = {
-            //     name : parent.querySelector('.fileName').innerText,
-            //     path : parent.querySelector('.filePath').innerText,
-            // }
-            // dtos.push(nowDto);
-            idx++;
         });
-
-        console.log(list);
-        await download(url, JSON.stringify(list));
-    }*/
+        fetch("/download2", {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(list)
+        }).then(response => response.json())
+            .then(json => {
+                if (json['result'] === 'success') {
+                    alert(downLoadCount + ' 파일 다운로드');
+                } else {
+                    console.log('실패');
+                }
+            }).catch(e => {
+            alert('다운로드 실패');
+            console.log(e);
+        });
+    }
 
     onClick('', 'click', ''); //페이지 열면 바로 루트로 들어가게
 
@@ -316,22 +300,6 @@
         // zTreeObj = jQuery.prototype.zTree.init(document.querySelector('#tree'), setting, zTreeNodes);
     });
 
-    // 파일업로드
-    document.getElementById('fileUpload').addEventListener('click', function () {
-        document.getElementById('customFile').click();
-    })
-
-    //파일업로드폼 숨기기
-    // document.getElementById('uploadForm').style.display = 'none';
-    document.getElementById('customFile').style.display = 'none';
-    document.getElementById('btnUpload').style.display = 'none';
-
-    document.getElementById('customFile').addEventListener('change', function () {
-        const filesLength = document.getElementById('customFile').files.length;
-        document.getElementById('btnUpload').style.display = filesLength === 0 ? 'none' : 'block';
-        document.getElementById('btnUpload').innerText = filesLength + '개 파일 업로드'
-    })
-
     //업로드
     document.getElementById('btnUpload').addEventListener('click', function () {
         const form = document.getElementById('uploadForm');
@@ -346,6 +314,7 @@
             alert('선택된 파일이없습니다');
             return;
         }
+
         fetch('/upload', {
             method: 'POST',
             headers: {},//업로드 헤더에 값이 있을경우 오히려 에러발생
@@ -363,18 +332,12 @@
         });
     });
 
-    function reNaming() {
+    //노드 이름 변경
+    document.getElementById('btnReNamingNode').addEventListener('click', function () {
+        const reName = document.getElementById('nodeReNameValue').value;
         const filePath = document.querySelector('.file-path').innerText; //파일 패스가 부모 경로이므로 /<<이것을 추가해줌
-        if (filePath === '//ROOT/') {
-            alert('루트는 변경할수없습니다');
-            return;
-        }
-        const nowName = document.querySelector('.curSelectedNode').querySelector('.node_name').innerText;
-        const reName = prompt('이름변경', nowName);
-        if (reName.length === 0) {
-            alert('폴더이름을 지정해주세요');
-            reNaming();
-        }
+        console.log(filePath);
+        console.log(reName);
         const data = {};
         data.path = filePath;
         data.reName = reName;
@@ -385,20 +348,16 @@
                 'Content-Type': 'application/json;charset=utf-8'
             },
             body: JSON.stringify(data)
-        }).then(() => alert("이름 변경[" + nowName + ']->[' + reName + ']'))
+        }).then(() => alert("이름 변경"))
             .catch(e => alert(e));
-    }
+    });
 
     //폴더추가
-    function addFolder() {
+    document.getElementById('btnAddFolder').addEventListener('click', function () {
         const param = {};
-        const addFolderName = window.prompt('추가할 폴더이름을 넣어주세요');
-        if (addFolderName.length === 0) {
-            alert('폴더이름을 지정하지 않았습니다');
-            addFolder();
-        }
         param.nodePath = document.querySelector('.file-path').innerText;
-        param.nodeName = addFolderName;
+        param.nodeName = document.getElementById('inPutNodeName').value;
+
         fetch('/folderAdd', {
             method: 'POST',
             headers: {
@@ -411,16 +370,13 @@
                 if (json['resultAdd']) alert(param.nodeName + '폴더 추가');
                 else alert('폴더 추가실패');
             }).catch(e => console.log(e));
-    }
+    });
 
 
     function deleteFolder() {
         const param = {};
         param.nodePath = document.querySelector('.file-path').innerText;
         const fileName = param.nodePath.substring(param.nodePath.lastIndexOf('/') + 1);
-        if (!confirm('[' + fileName + ']폴더를 삭제하시겠습니까?')) {
-            return;
-        }
         fetch('/folderDelete', {
             method: 'POST',
             headers: {
@@ -434,6 +390,25 @@
                 else alert(fileName + '을 삭제하는데 실패하였습니다');
             }).catch(e => console.log(e));
     }
+
+    //삭제기능
+    document.querySelector('#btnDeleteFolder').addEventListener('click', function () {
+        const param = {};
+        param.nodePath = document.querySelector('.file-path').innerText;
+        const fileName = param.nodePath.substring(param.nodePath.lastIndexOf('/') + 1);
+        fetch('/folderDelete', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(param)
+        }).then(response => response.json())
+            .then(json => {
+                if (json['delResult']) alert(fileName + '을 삭제 하였습니다');
+                else alert(fileName + '을 삭제하는데 실패하였습니다');
+            }).catch(e => console.log(e));
+    });
 
     //페이징
     function movePage(pageNo, target, depth) {
@@ -457,6 +432,7 @@
             let fileList = document.querySelector('.file-list');
             // appendHtml(fileList, data);
             $('.file-list').append(data);
+            console.log('데이터:' + data)
         }).fail(function (request, error) {
             console.log(request.responseText);
             console.log('로딩 실패');

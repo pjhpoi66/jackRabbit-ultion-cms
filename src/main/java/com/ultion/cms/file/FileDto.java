@@ -2,6 +2,8 @@ package com.ultion.cms.file;
 
 import lombok.*;
 
+import java.util.List;
+
 @NoArgsConstructor
 @Getter
 @AllArgsConstructor
@@ -17,6 +19,8 @@ public class FileDto {
     private String owner;
     private String lastUpdate;
     private String type;
+    private List<FileDto> dtoList;
+
 
 }
 

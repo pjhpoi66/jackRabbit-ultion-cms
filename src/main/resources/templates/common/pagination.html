@@ -9,9 +9,9 @@
             <a th:attr="onclick=|movePage('${fileMap.pagingMap.prevPageNo}')|">{{.}}</a>
         </li>
 
-            <li th:each="pageNo : ${fileMap.pagingMap.pageList}" th:id="|${pageNo}|">
-                <a th:attr="onclick=|movePage('${pageNo}')|" th:text="|${pageNo}|" ></a>
-            </li>
+        <li th:each="pageNo : ${fileMap.pagingMap.pageList}" th:id="|${pageNo}|">
+            <a th:attr="onclick=|movePage('${pageNo}')|" th:text="|${pageNo}|"></a>
+        </li>
 
         <li class="next">
             <a th:attr="onclick=|movePage('${fileMap.pagingMap.nextPageNo}')|">next</a>
@@ -22,9 +22,17 @@
     </ul>
     <script>
 
+        // (function () {
+        //     let pageNos = $('#page-no').val();
+        //     if (pageNos == '' || pageNos == null) {
+        //         pageNos = 1;
+        //     }
+        //     $('#' + pageNos).addClass("active");
+        // })();
+
         $(function () {
             let pageNos = $('#page-no').val();
-            if(pageNos == '' || pageNos == null){
+            if (pageNos == '' || pageNos == null) {
                 pageNos = 1;
             }
             $('#' + pageNos).addClass("active");
