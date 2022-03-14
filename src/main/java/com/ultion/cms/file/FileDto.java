@@ -19,7 +19,6 @@ public class FileDto {
     private String owner;
     private String lastUpdate;
     private String type;
-    private List<FileDto> dtoList;
 
 
 }

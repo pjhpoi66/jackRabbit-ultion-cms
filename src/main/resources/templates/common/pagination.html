@@ -1,6 +1,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <div class="pagination-wrap" th:fragment="pagination">
+
     <ul class="pagination">
         <li class="first">
             <a href="javascript:movePage(1)">first</a>
@@ -22,13 +23,14 @@
     </ul>
     <script>
 
-        // (function () {
-        //     let pageNos = $('#page-no').val();
-        //     if (pageNos == '' || pageNos == null) {
+
+        // document.onload(() => {
+        //     let pageNos = document.querySelector("#page-no").value;
+        //     if (pageNos === '' || pageNos == null) {
         //         pageNos = 1;
         //     }
-        //     $('#' + pageNos).addClass("active");
-        // })();
+        //     document.querySelector('#' + pageNos).addClass("active")
+        // });
 
         $(function () {
             let pageNos = $('#page-no').val();

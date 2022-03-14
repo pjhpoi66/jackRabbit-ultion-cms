@@ -1,12 +1,7 @@
 package com.ultion.cms.document.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ultion.cms.document.service.DocumentService;
 import com.ultion.cms.file.FileDto;
-import com.ultion.cms.file.FileListDto;
-import com.ultion.cms.test.TestDto;
-import com.ultion.cms.test.TestListDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -18,10 +13,6 @@ import javax.jcr.RepositoryException;
 import javax.jcr.Session;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.FormParam;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -95,20 +86,13 @@ public class DocumentController {
     public void down(HttpServletRequest request, HttpServletResponse response,  @RequestBody List<FileDto>  fileDtos ) throws Exception {
         documentService.downLoad(request, response, session, fileDtos);
     }
-    @PostMapping("/download3")
-    @ResponseBody
-    public void test(HttpServletRequest request, HttpServletResponse response, @RequestBody List<FileDto> fileDtos ) throws Exception {
 
-        System.out.println(fileDtos);
-        System.out.println("브레이크 포인트");
-//        documentService.downLoad(request, response, session, dtos.getDtos());
-    }
 
     @PostMapping("/reName")
     @ResponseBody
     public void reNaming(@RequestBody Map<String, String> map) throws RepositoryException {
         String path = map.get("path").substring(6);
-        Node reNamingNode = documentService.findFileNode(root, FileDto.builder().path(path).build());
+        Node reNamingNode = documentService.findNode(root, FileDto.builder().path(path).build());
         documentService.reNamingFile(reNamingNode, map.get("reName"));
 //        return "success";
     }

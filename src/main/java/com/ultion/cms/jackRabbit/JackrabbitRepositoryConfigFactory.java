@@ -4,7 +4,6 @@ import org.apache.jackrabbit.core.config.ConfigurationException;
 import org.apache.jackrabbit.core.config.RepositoryConfig;
 import org.apache.jackrabbit.core.config.RepositoryConfigurationParser;
 import org.springframework.beans.factory.BeanCreationException;
-import org.springframework.beans.factory.annotation.Value;
 import org.xml.sax.InputSource;
 
 import java.io.FileNotFoundException;
@@ -16,7 +15,7 @@ public class JackrabbitRepositoryConfigFactory {
 
     private final String JCR_REP_HOME = "jcr.rep.home";
 
-    private String jcrHome = "jackrabbit_1";
+    private String jcrHome = "jackrabbit";
 
     private String configFilename = "repository.xml";
 
@@ -87,7 +86,7 @@ public class JackrabbitRepositoryConfigFactory {
     }
 
     /**
-     * Set the classpath-relative filename of config file (repository.xml)
+     * Set the classpath-relative filename of config file (conf/repository.xml)
      *
      * @param configFilename
      */

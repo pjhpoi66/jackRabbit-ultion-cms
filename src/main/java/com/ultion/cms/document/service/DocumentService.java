@@ -1,6 +1,5 @@
 package com.ultion.cms.document.service;
 
-import com.ultion.cms.core.util.DateUtil;
 import com.ultion.cms.core.web.Pagination;
 import com.ultion.cms.file.FileCharsetService;
 import com.ultion.cms.file.FileDto;
@@ -9,29 +8,22 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
-import org.apache.jackrabbit.api.JackrabbitNodeTypeManager;
 import org.apache.jackrabbit.commons.JcrUtils;
-import org.apache.jackrabbit.commons.cnd.CndImporter;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
-import org.apache.jackrabbit.core.nodetype.NodeTypeDefinitionImpl;
 import org.apache.jackrabbit.value.DateValue;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 
 import javax.jcr.*;
-import javax.jcr.nodetype.*;
-import javax.servlet.ServletContext;
+import javax.jcr.nodetype.NodeType;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.nio.charset.StandardCharsets;
 
 @Service
 @Slf4j
@@ -44,6 +36,40 @@ public class DocumentService {
     private String jcrHome;
     private final FileCharsetService fileCharsetService;
 
+
+
+
+    public Map<String, Object> getNodeList(Session session, FileDto dto) throws RepositoryException {
+        Map<String, Object> result = new HashMap<>();
+        List<FileDto> foundDtos = getDtosByDto(session, dto);
+        result.put("fileList", foundDtos);
+        Pagination pagination = new Pagination();
+        pagination.setPageNo(10);
+        pagination.setPageNo(1);
+        pagination.setTotalCount(foundDtos.size());
+
+        return null;
+    }
+
+    private List<FileDto> getRootList(Session session) throws RepositoryException {
+        Node root = session.getRootNode();
+        return getDtosByDto(session,FileDto.builder().path(root.getPath()).name(root.getName()).build());
+    }
+
+    private List<FileDto> getDtosByDto(Session session, FileDto dto) throws RepositoryException {
+        Node targetNode = findNode(session.getRootNode() , dto);
+        NodeIterator nodeIterator = targetNode.getNodes();
+        List<FileDto> foundDtos = new ArrayList<>();
+        while (nodeIterator.hasNext()) {
+            Node nowNode = nodeIterator.nextNode();
+            FileDto fileDto = new FileDto();
+            fileDto.setName(nowNode.getName());
+            fileDto.setName(nowNode.getPath());
+            fileDto.setType(nowNode.isNodeType(NodeType.NT_FILE) ? FileType.FILE.getValue() : FileType.FOLDER.getValue());
+            foundDtos.add(fileDto);
+        }
+        return foundDtos;
+    }
 
     public Map<String, Object> indexPageLoad(Session session) throws Exception {
         Map<String, Object> result = new HashMap<>();
@@ -222,7 +248,7 @@ public class DocumentService {
     }
 
 
-    public String downLoad(HttpServletRequest request, HttpServletResponse response, Session session,  List<FileDto> fileDtos) throws Exception {
+    public String downLoad(HttpServletRequest request, HttpServletResponse response, Session session, List<FileDto> fileDtos) throws Exception {
         Node root = session.getRootNode();
 
         fileDtos.forEach(dto -> {
@@ -240,7 +266,7 @@ public class DocumentService {
                 FileUtils.copyInputStreamToFile(is, copyFile);
                 FileInputStream fis = new FileInputStream(copyFile);
                 response.setHeader("Content-Description", "file download");
-                response.setHeader("Content-Disposition", "attachment; filename=\""+dto.getName()+";charset=utf-8;");
+                response.setHeader("Content-Disposition", "attachment; filename=\"" + dto.getName() + ";charset=utf-8;");
                 response.setHeader("Content-Transfer-Encoding", "binary");
 
 
@@ -272,7 +298,7 @@ public class DocumentService {
         return findNode.getNode(paths[paths.length - 1]);
     }
 
-    public Node findFileNode(Node root, FileDto dto) throws RepositoryException {
+    public Node findNode(Node root, FileDto dto) throws RepositoryException {
 
         String[] paths = dto.getPath().substring(1).split("/");
         Node findNode = root.getNode(paths[0]);
@@ -324,9 +350,6 @@ public class DocumentService {
         List<MultipartFile> files = request.getFiles("file");
 
         for (MultipartFile file : files) {
-            String fileName = file.getOriginalFilename();
-            String fileExt = FilenameUtils.getExtension(fileName);
-            String fileBaseName = FilenameUtils.getBaseName(fileName);
             try {
                 //노드 접근
                 Node root = session.getRootNode();
