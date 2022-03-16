@@ -12,6 +12,7 @@ import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
 import org.apache.jackrabbit.value.DateValue;
+import org.springframework.http.ContentDisposition;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -37,8 +38,6 @@ public class DocumentService {
     private final FileCharsetService fileCharsetService;
 
 
-
-
     public Map<String, Object> getNodeList(Session session, FileDto dto) throws RepositoryException {
         Map<String, Object> result = new HashMap<>();
         List<FileDto> foundDtos = getDtosByDto(session, dto);
@@ -53,11 +52,11 @@ public class DocumentService {
 
     private List<FileDto> getRootList(Session session) throws RepositoryException {
         Node root = session.getRootNode();
-        return getDtosByDto(session,FileDto.builder().path(root.getPath()).name(root.getName()).build());
+        return getDtosByDto(session, FileDto.builder().path(root.getPath()).name(root.getName()).build());
     }
 
     private List<FileDto> getDtosByDto(Session session, FileDto dto) throws RepositoryException {
-        Node targetNode = findNode(session.getRootNode() , dto);
+        Node targetNode = findNode(session.getRootNode(), dto);
         NodeIterator nodeIterator = targetNode.getNodes();
         List<FileDto> foundDtos = new ArrayList<>();
         while (nodeIterator.hasNext()) {
@@ -263,22 +262,23 @@ public class DocumentService {
 
 
                 File copyFile = new File(dto.getName());
-                FileUtils.copyInputStreamToFile(is, copyFile);
-                FileInputStream fis = new FileInputStream(copyFile);
-                response.setHeader("Content-Description", "file download");
-                response.setHeader("Content-Disposition", "attachment; filename=\"" + dto.getName() + ";charset=utf-8;");
-                response.setHeader("Content-Transfer-Encoding", "binary");
+//                String reFileName = fileCharsetService.getFileName(request, resourceNode.getName());
+                String reFileName = new String(dto.getName().getBytes(StandardCharsets.UTF_8),"ISO-8859-1");
+                response.setContentType("application/octet-stream;");
+                response.setHeader("Content-disposition", "attachment;filename=\"" + dto.getName()+"\"");
 
 
-                response.setContentType("application/octet-stream");
-                response.setContentLength((int) copyFile.length());
+//                response.setHeader("Content-Description", "file download");
+//                response.setHeader("Content-Disposition", "attachment; filename=\"" + dto.getName() + ";charset=utf-8;");
+//                response.setHeader("Content-Transfer-Encoding", "binary");
+//                response.setContentType("application/octet-stream");
+//                response.setContentLength((int) copyFile.length());
 
                 int read = 0;
                 byte[] buffer = new byte[1024];
-                while ((read = fis.read(buffer)) != -1) { // 1024바이트씩 계속 읽으면서 outputStream에 저장, -1이 나오면 더이상 읽을 파일이 없음
+                while ((read = is.read(buffer)) != -1) { // 1024바이트씩 계속 읽으면서 outputStream에 저장, -1이 나오면 더이상 읽을 파일이 없음
                     os.write(buffer, 0, read);
                 }
-                fis.close();
             } catch (RepositoryException | IOException e) {
                 e.printStackTrace();
             }

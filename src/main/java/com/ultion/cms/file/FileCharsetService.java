@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import javax.servlet.http.HttpServletRequest;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class FileCharsetService {
@@ -13,27 +14,20 @@ public class FileCharsetService {
         return getFileNm(getBrowser(request), fileName);
     }
 
-    private String getFileNm(String browser, String fileNm) {
+    private String getFileNm(String browser, String fileName) {
         String reFileNm = null;
         try {
             if (browser.equals("MSIE") || browser.equals("Trident") || browser.equals("Edge")) {
-                reFileNm = URLEncoder.encode(fileNm, "UTF-8").replaceAll("\\+", "%20");
+                reFileNm = URLEncoder.encode(fileName, "UTF-8").replaceAll("\\+", "%20");
             } else {
                 if (browser.equals("Chrome")) {
-                    StringBuffer sb = new StringBuffer();
-                    for (int i = 0; i < fileNm.length(); i++) {
-                        char c = fileNm.charAt(i);
-                        if (c > '~') {
-                            sb.append(URLEncoder.encode(Character.toString(c), "UTF-8"));
-                        } else {
-                            sb.append(c);
-                        }
-                    }
-                    reFileNm = sb.toString();
+                    reFileNm = new String(fileName.getBytes(StandardCharsets.UTF_8), "ISO-8859-1");
                 } else {
-                    reFileNm = new String(fileNm.getBytes("UTF-8"), "ISO-8859-1");
+                    reFileNm = new String(fileName.getBytes("UTF-8"), "ISO-8859-1");
                 }
-                if (browser.equals("Safari") || browser.equals("Firefox")) reFileNm = URLDecoder.decode(reFileNm);
+                if (browser.equals("Safari") || browser.equals("Firefox")) {
+                    reFileNm = new String(fileName.getBytes(StandardCharsets.UTF_8), "ISO-8859-1");
+                }
             }
         } catch (Exception e) {
         }

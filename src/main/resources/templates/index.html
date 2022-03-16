@@ -180,6 +180,10 @@
             body: formData,
             method: 'post',
         });
+
+        const realFileName = formData.get('name');
+        console.log(realFileName);
+
         const blob = await init.blob();
         const disposition = init.headers.get('content-disposition');
         let fileName = 'file';
@@ -187,14 +191,18 @@
             const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
             const matches = filenameRegex.exec(disposition)
             if (matches != null && matches[1]) {
-                fileName = matches[1].replace(/['"]/g, '')
+                console.log('matches[1]:'+matches[1])
+                // fileName = matches[1].replace(/['"]/g, '')
+                // fileName = decodeURI(matches[1].replace(/['"]/g, ""));
+                // fileName = realFileName;
             }
         }
+
         //가짜 링크 만들기
         const url = URL.createObjectURL(await blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = fileName
+        a.download = realFileName
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
