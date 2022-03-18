@@ -128,7 +128,6 @@
 <script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
 <script th:inline="javascript">
     let dep1List = [[${dep1NodeList}]];
-
     $(".custom-file-input").on("change", function () {
         let fileName = $(this).val().split("\\").pop();
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
@@ -151,12 +150,11 @@
                 name: "ROOT",
                 nodePath: "",
                 open: true,
-                children: dep1List
-                /*children: [{ name: "폴더 1" }, { name: "폴더 2" }, { name: "폴더 3", children: [{ name: "폴더 3-1" }, { name: "폴더 3-2" }] }, { name: "폴더 4", children: [{ name: "폴더 4-1" }, { name: "폴더 4-2" }] }]*/
+                children: [[${fileMap}]]
             }
         ]
 
-
+    console.log([[${fileMap}]]);
     function checkListener() {
         const checkFiles = document.querySelectorAll('.chk-file');
         const checkedFiles = document.querySelectorAll('.chk-file:checked');
@@ -186,15 +184,11 @@
 
         const blob = await init.blob();
         const disposition = init.headers.get('content-disposition');
-        let fileName = 'file';
         if (disposition && disposition.indexOf('attachment') !== -1) {
             const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
             const matches = filenameRegex.exec(disposition)
             if (matches != null && matches[1]) {
-                console.log('matches[1]:'+matches[1])
-                // fileName = matches[1].replace(/['"]/g, '')
-                // fileName = decodeURI(matches[1].replace(/['"]/g, ""));
-                // fileName = realFileName;
+                console.log('matches[1]:' + matches[1])
             }
         }
 
@@ -236,39 +230,12 @@
             formData.append('name', name);
             formData.append('path', path);
             const url = '/download';
-             download(url, formData);
+            download(url, formData);
         });
 
         console.log(list);
         // await download(url, JSON.stringify(list));
     }
-    /*async function multiDown() {
-        const checkList = document.querySelectorAll('.chk-file:checked');
-        const url = '/download2';
-        const formData = new FormData();
-        const list = [];
-        if (checkList.length === 0) {
-            alert('선택한 파일이없습니다');
-            return;
-        }
-        let idx = 0;
-        checkList.forEach(checked => {
-            const parent = checked.parentElement.parentElement;
-
-            const fileName = parent.querySelector('.fileName').innerText;
-            const filePath = parent.querySelector('.filePath').innerText;
-            list.push({'name': fileName, 'path': filePath});
-            // const nowDto = {
-            //     name : parent.querySelector('.fileName').innerText,
-            //     path : parent.querySelector('.filePath').innerText,
-            // }
-            // dtos.push(nowDto);
-            idx++;
-        });
-
-        console.log(list);
-        await download(url, JSON.stringify(list));
-    }*/
 
     onClick('', 'click', ''); //페이지 열면 바로 루트로 들어가게
 
@@ -306,10 +273,6 @@
             param.depth = 3;
         document.getElementById('node-path').value = nodePath;
         document.getElementById('node-depth').value = param.depth;
-
-        // $('#node-path').val(nodePath);
-        // $('#node-depth').val(param.depth);
-
         movePage(1, nodePath, param.depth);
 
     }
@@ -324,21 +287,25 @@
         // zTreeObj = jQuery.prototype.zTree.init(document.querySelector('#tree'), setting, zTreeNodes);
     });
 
-    // 파일업로드
+    // 파일업로드버튼 리스너 달아주기
     document.getElementById('fileUpload').addEventListener('click', function () {
+        if (document.querySelector('.file-path').innerText === '//ROOT/') {
+            alert('루트에는 파일을 업로드 할수없습니다');
+            return;
+        }
         document.getElementById('customFile').click();
-    })
+    });
 
     //파일업로드폼 숨기기
-    // document.getElementById('uploadForm').style.display = 'none';
     document.getElementById('customFile').style.display = 'none';
     document.getElementById('btnUpload').style.display = 'none';
+
 
     document.getElementById('customFile').addEventListener('change', function () {
         const filesLength = document.getElementById('customFile').files.length;
         document.getElementById('btnUpload').style.display = filesLength === 0 ? 'none' : 'block';
         document.getElementById('btnUpload').innerText = filesLength + '개 파일 업로드'
-    })
+    });
 
     //업로드
     document.getElementById('btnUpload').addEventListener('click', function () {
@@ -346,7 +313,7 @@
         const data = new FormData(form);
         const filesLength = document.getElementById('customFile').files.length; //0개 파일 올리기 방지
         const folderPath = document.querySelector('.file-path').innerText; // 폴더선택안하기 방지
-        if (folderPath === '//ROOT') {
+        if (folderPath === '//ROOT/') {
             alert('업로드할 폴더가 지정되지 않았습니다.');
             return;
         }
@@ -361,7 +328,9 @@
         }).then(response => response.json())
             .then(json => {
                 if (json['resultAdd']) {
-                    alert(filesLength + '개 파일 업로드 성공!');
+                    alert('[' + folderPath + ']' + filesLength + '개 파일 업로드 성공!');
+                    window.location.reload();
+
                 } else {
                     console.log(json);
                     alert('업로드실패');
@@ -393,8 +362,16 @@
                 'Content-Type': 'application/json;charset=utf-8'
             },
             body: JSON.stringify(data)
-        }).then(() => alert("이름 변경[" + nowName + ']->[' + reName + ']'))
-            .catch(e => alert(e));
+        }).then(res => res.text())
+            .then(text => {
+                if (text === 'success') {
+                    alert("이름 변경[" + nowName + ']->[' + reName + ']');
+                } else {
+                    alert(text);
+                }
+            })
+            .catch(e => console.log(e));
+        window.location.href = '/index';
     }
 
     //폴더추가
@@ -416,8 +393,10 @@
             body: JSON.stringify(param)
         }).then(response => response.json())
             .then(json => {
-                if (json['resultAdd']) alert(param.nodeName + '폴더 추가');
-                else alert('폴더 추가실패');
+                if (json['resultAdd']) {
+                    alert(param.nodeName + '폴더 추가');
+                    window.location.href = '/index';
+                } else alert('폴더 추가실패');
             }).catch(e => console.log(e));
     }
 
@@ -441,6 +420,7 @@
                 if (json['delResult']) alert(fileName + '을 삭제 하였습니다');
                 else alert(fileName + '을 삭제하는데 실패하였습니다');
             }).catch(e => console.log(e));
+        window.location.href = '/index';
     }
 
     //페이징

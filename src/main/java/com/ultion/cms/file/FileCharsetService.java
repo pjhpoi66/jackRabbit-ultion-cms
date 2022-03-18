@@ -3,6 +3,7 @@ package com.ultion.cms.file;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -10,8 +11,10 @@ import java.nio.charset.StandardCharsets;
 @Service
 public class FileCharsetService {
 
-    public String getFileName(HttpServletRequest request, String fileName) {
-        return getFileNm(getBrowser(request), fileName);
+    public String getFileName(HttpServletRequest request, HttpServletResponse response ,String fileName) {
+        String browser = getBrowser(request);
+        String changedName = getFileNm(browser, fileName);
+        return changedName;
     }
 
     private String getFileNm(String browser, String fileName) {
@@ -34,10 +37,10 @@ public class FileCharsetService {
         return reFileNm;
     }
 
+
     private String getBrowser(HttpServletRequest req) {
         String userAgent = req.getHeader("User-Agent");
-        if (userAgent.indexOf("MSIE") > -1 || userAgent.indexOf("Trident") > -1 // IE11
-                || userAgent.indexOf("Edge") > -1) {
+        if (userAgent.indexOf("MSIE") > -1 || userAgent.indexOf("Trident") > -1 || userAgent.indexOf("Edge") > -1) {
             return "MSIE";
         } else if (userAgent.indexOf("Chrome") > -1) {
             return "Chrome";
@@ -51,6 +54,4 @@ public class FileCharsetService {
             return null;
         }
     }
-
-
 }

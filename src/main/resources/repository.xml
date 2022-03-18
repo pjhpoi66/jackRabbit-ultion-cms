@@ -94,7 +94,6 @@
         </PersistenceManager>
     </Versioning>
 
-    <RepositoryLockMechanism class="org.apache.jackrabbit.core.util.CooperativeFileLock" />
     <!--
     Cluster Configuration
 
@@ -102,6 +101,8 @@
     clustering Jackrabbit. For other databases, change the  connection,
     credentials, and schema settings.
     -->
+    <!--레파지토리 락 문제를 위한 협력 파일 잠금 매커니즠-->
+    <RepositoryLockMechanism class="org.apache.jackrabbit.core.util.CooperativeFileLock" />
 
     <!--<Cluster id="node_1" syncDelay="5">
 		<Journal class="org.apache.jackrabbit.core.journal.DatabaseJournal">
@@ -109,7 +110,7 @@
 			<param name="driver" value="com.mysql.jdbc.Driver"/>
 			<param name="url" value="jdbc:mysql://localhost/jcr"/>
 			<param name="user" value=""/>
-			<param name="jackrabbit" value=""/>
+			<param name="password" value=""/>
 			<param name="schema" value="mysql"/>
 			<param name="schemaObjectPrefix" value="J_C_"/>
 		</Journal>

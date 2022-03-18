@@ -6,13 +6,10 @@ import com.ultion.cms.file.FileDto;
 import com.ultion.cms.file.FileType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.jackrabbit.commons.JcrUtils;
 import org.apache.jackrabbit.core.data.DataStore;
 import org.apache.jackrabbit.core.data.FileDataStore;
 import org.apache.jackrabbit.value.DateValue;
-import org.springframework.http.ContentDisposition;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
@@ -38,36 +35,122 @@ public class DocumentService {
     private final FileCharsetService fileCharsetService;
 
 
-    public Map<String, Object> getNodeList(Session session, FileDto dto) throws RepositoryException {
-        Map<String, Object> result = new HashMap<>();
-        List<FileDto> foundDtos = getDtosByDto(session, dto);
-        result.put("fileList", foundDtos);
-        Pagination pagination = new Pagination();
-        pagination.setPageNo(10);
-        pagination.setPageNo(1);
-        pagination.setTotalCount(foundDtos.size());
-
-        return null;
+    public Map<String, Object> getChildFilesDto(String path, String pageNo, Session session) throws Exception {
+        Map<String, Object> newMap = new HashMap<>();
+        if (path.equals("//ROOT/") || path.length() == 1) {
+            return getChildNodes(session, pageNo, FileDto.builder().path("root").build());
+        } else {
+            return getChildNodes(session, pageNo, FileDto.builder().path(path).build());
+        }
     }
 
-    private List<FileDto> getRootList(Session session) throws RepositoryException {
+
+    private Map<String, Object> getChildNodes(Session session, String pageNo, FileDto dto) throws RepositoryException {
+        Map<String, Object> resultMap = new HashMap<>();
         Node root = session.getRootNode();
-        return getDtosByDto(session, FileDto.builder().path(root.getPath()).name(root.getName()).build());
-    }
-
-    private List<FileDto> getDtosByDto(Session session, FileDto dto) throws RepositoryException {
-        Node targetNode = findNode(session.getRootNode(), dto);
-        NodeIterator nodeIterator = targetNode.getNodes();
-        List<FileDto> foundDtos = new ArrayList<>();
-        while (nodeIterator.hasNext()) {
-            Node nowNode = nodeIterator.nextNode();
+        Node targetNode = dto.getPath().equals("root") ? root : findNode(root, dto);
+        NodeIterator iterator = targetNode.getNodes();
+        List<FileDto> dtoList = new ArrayList<>();
+        while (iterator.hasNext()) {
+            Node nowNode = iterator.nextNode();
             FileDto fileDto = new FileDto();
             fileDto.setName(nowNode.getName());
             fileDto.setName(nowNode.getPath());
-            fileDto.setType(nowNode.isNodeType(NodeType.NT_FILE) ? FileType.FILE.getValue() : FileType.FOLDER.getValue());
-            foundDtos.add(fileDto);
+            if (nowNode.isNodeType(NodeType.NT_FILE)) {
+                fileDto.setType(FileType.FILE.getValue());
+                fileDto.setLastUpdate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(
+                        nowNode.getNode(Property.JCR_CONTENT).getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime()));
+                fileDto.setOwner(nowNode.getProperty(Property.JCR_CREATED_BY).getString());
+            } else {
+                fileDto.setType(FileType.FOLDER.getValue());
+            }
+            dtoList.add(fileDto);
         }
-        return foundDtos;
+        int childSize = dtoList.size();
+        Pagination pagination = new Pagination();
+        pagination.setPageSize(10);
+        if (pageNo == null) {
+            pagination.setPageNo(2);
+        } else {
+            pagination.setPageNo(Integer.parseInt(pageNo));
+        }
+        pagination.setTotalCount(childSize);
+        int count = 0;
+        if (childSize > pagination.getPageSize()) {
+            int rowNum = pagination.getStartRowNum();
+            List<FileDto> newChildList = new ArrayList<>();
+            while (count < pagination.getPageSize()) { //페이지 사이즈만큼
+                int sum = count + rowNum;
+                if (sum < childSize) {
+                    FileDto fileDto = dtoList.get(sum);
+                    newChildList.add(fileDto);
+                }
+                count++;
+            }
+            dtoList = newChildList;
+        }
+        Map<String, Object> pagingMap = new HashMap<>();
+        pagingMap.put("pageList", pagination.getPageList());
+        pagingMap.put("pageNo", pagination.getPageNo());
+        pagingMap.put("pageSize", pagination.getPageSize());
+        pagingMap.put("prevPageNo", pagination.getPrevPageNo());
+        pagingMap.put("nextPageNo", pagination.getNextPageNo());
+        pagingMap.put("finalPageNo", pagination.getFinalPageNo());
+        resultMap.put("pagingMap", pagingMap);
+        resultMap.put("fileList", dtoList);
+        return resultMap;
+    }
+
+    public Map<String, Object> searchListByPath(Session session, String path) throws RepositoryException {
+
+        Map<String, Object> resultMap = new HashMap<>();
+        List<FileDto> search = getBuildDtoList(session, path);
+        resultMap.put("searchList", search);
+
+
+        return resultMap;
+    }
+
+    private List<FileDto> getBuildDtoList(Session session, String path) throws RepositoryException {
+        List<FileDto> buildDtoList = new ArrayList<>(); //최종 결과물을 담을 리스트
+        Node root = session.getRootNode();
+        if (path.equals("")) {  //경로를 루트를 받았을경우
+            insertDtoList(buildDtoList, root, FileDto.builder().id(1).build(), 0);
+            return buildDtoList;
+        }
+        String[] targetArr = path.split("/"); // 모든 슬러쉬로 경로를 구분
+        Node targetNode = root; //타겟 노드가 반복되면서 마지막 경로까지 사용됨
+        FileDto targetDto = FileDto.builder().id(0).pid(0).build(); //초기값은 (root) id , pid 0로 시작
+        int startId = insertDtoList(buildDtoList, root, targetDto, 0); //insertDto 는 list 를받고 마지막 id+1 을반환
+        for (int i = 1; i < targetArr.length; i++) { //총 경로의 단계만큼 반목
+            targetNode = targetNode.getNode(targetArr[i]);
+            for (FileDto dto : buildDtoList) {
+                if (dto.getName().equals(targetArr[i])) { //fileDto 리스트중에 현재 찾을 경로의 이름을 가진 dto 를 찾아서 타겟으로설정
+                    targetDto = dto;
+                }
+            }
+            startId = insertDtoList(buildDtoList, targetNode, targetDto, startId);
+        }
+        return buildDtoList;
+    }
+
+    private int insertDtoList(List<FileDto> dtoList, Node parentNode, FileDto parentDto, int startId) throws RepositoryException {
+        int idx = startId;
+        //시작할 id 값을 받고 상위노드의 하위 노드들을 세팅
+        NodeIterator nodeIterator = parentNode.getNodes();
+        while (nodeIterator.hasNext()) {
+            Node nowNode = nodeIterator.nextNode();
+            dtoList.add(FileDto.builder()
+                    .id(idx)
+                    .pid(parentDto.getId())
+                    .name(nowNode.getName())
+                    .path(nowNode.getPath())
+                    .type(nowNode.isNodeType(NodeType.NT_FILE) ? FileType.FILE.getValue() : FileType.FOLDER.getValue())
+                    .build()
+            );
+            idx++;
+        }
+        return idx;
     }
 
     public Map<String, Object> indexPageLoad(Session session) throws Exception {
@@ -258,21 +341,17 @@ public class DocumentService {
                 e.printStackTrace();
             }
             try (OutputStream os = response.getOutputStream();
-                 InputStream is = JcrUtils.readFile(resourceNode);) {
+                 InputStream is = JcrUtils.readFile(resourceNode)) {
+                String changedFileName = fileCharsetService.getFileName(request, response, dto.getName());
+                response.setHeader("Content-Description", "file download");
+                response.setHeader("Content-Disposition", "attachment; filename=\"".concat(changedFileName).concat("\""));
+                response.setHeader("Content-Transfer-Encoding", "binary");
 
-
-                File copyFile = new File(dto.getName());
-//                String reFileName = fileCharsetService.getFileName(request, resourceNode.getName());
-                String reFileName = new String(dto.getName().getBytes(StandardCharsets.UTF_8),"ISO-8859-1");
-                response.setContentType("application/octet-stream;");
-                response.setHeader("Content-disposition", "attachment;filename=\"" + dto.getName()+"\"");
-
-
-//                response.setHeader("Content-Description", "file download");
-//                response.setHeader("Content-Disposition", "attachment; filename=\"" + dto.getName() + ";charset=utf-8;");
+//                response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(dto.getName(), StandardCharsets.UTF_8) + ";");
 //                response.setHeader("Content-Transfer-Encoding", "binary");
 //                response.setContentType("application/octet-stream");
 //                response.setContentLength((int) copyFile.length());
+//                fileCharsetService.setFileName(request, response, dto.getName());
 
                 int read = 0;
                 byte[] buffer = new byte[1024];
@@ -372,7 +451,6 @@ public class DocumentService {
                 resNode.setProperty(Property.JCR_LAST_MODIFIED, dv.getDate());
                 resNode.setProperty(Property.JCR_ENCODING, StandardCharsets.UTF_8.name());
                 resNode.setProperty(Property.JCR_DATA, file.getInputStream());
-
                 System.out.println("만든이:" + fileNode.getProperty(Property.JCR_CREATED_BY));
 
                 //데이터스토어 레코드추가
@@ -415,11 +493,12 @@ public class DocumentService {
         return isSuccess;
     }
 
-    public void reNamingFile(Node node, String newName) throws RepositoryException {
+    public String reNamingFile(Node node, String newName) throws RepositoryException {
         final String parentPath = node.getParent().getPath();
-        final String path = parentPath.substring(parentPath.length() - 1).equals("/") ? parentPath : parentPath + "/";
+        final String path = parentPath.equals("/") ? parentPath : parentPath + "/";
         node.getSession().move(node.getPath(), path + newName);
         node.getSession().save();
+        return "success";
 //        node.getSession().logout();
     }
 

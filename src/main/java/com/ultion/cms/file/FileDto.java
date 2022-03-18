@@ -10,12 +10,17 @@ import java.util.List;
 @Setter
 @Builder
 public class FileDto {
-    private String uuid;
+    //    private String uuid;
+    private int id;
+    private int pid;
+    private String path;
+
     private String name;
     private String contentType;
-    private String path;
-    private String index;
-    private String status;
+
+
+    //    private int parentId;
+//    private String status;
     private String owner;
     private String lastUpdate;
     private String type;

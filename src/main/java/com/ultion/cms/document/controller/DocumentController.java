@@ -32,10 +32,19 @@ public class DocumentController {
         return new ModelAndView("index", result);
     }
 
+    @GetMapping("/index/**")
+    public ModelAndView searchNode (HttpServletRequest request ,@RequestParam(value = "pageNo" , required = false) String pageNo) throws Exception {
+        String path  = request.getRequestURI().split(request.getContextPath() + "/index")[1];
+        Map<String, Object> resultMap = new HashMap<>();
+        resultMap.put("fileMap", documentService.searchListByPath( session,path));
+        return new ModelAndView("index", resultMap);
+    }
+
     @PostMapping("/nodeList")
     @ResponseBody
     public ModelAndView getNodeList(@RequestBody Map<String, Object> param) throws Exception {
-        Map<String, Object> resultMap = documentService.indexPageLoad(session);
+//        Map<String, Object> resultMap = documentService.indexPageLoad(session);
+        Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("fileMap", documentService.getNodeList(param, session));
         return new ModelAndView("index-content", resultMap);
     }
@@ -90,11 +99,11 @@ public class DocumentController {
 
     @PostMapping("/reName")
     @ResponseBody
-    public void reNaming(@RequestBody Map<String, String> map) throws RepositoryException {
+    public String reNaming(@RequestBody Map<String, String> map) throws RepositoryException {
+        ModelAndView modelAndView = new ModelAndView("redirect:/index");
         String path = map.get("path").substring(6);
         Node reNamingNode = documentService.findNode(root, FileDto.builder().path(path).build());
-        documentService.reNamingFile(reNamingNode, map.get("reName"));
-//        return "success";
+        return documentService.reNamingFile(reNamingNode, map.get("reName"));
     }
 
 
