@@ -27,7 +27,6 @@
                 <img src="/static/assets/images/no-data.png" alt="No data found"/>
             </td>
         </tr>
-
         <tr th:each="file : ${fileMap.fileList}">
             <td class="chk-path">
                 <input type="checkbox" class="chk-file" th:value="|${file.path}|" onchange="checkListener()">

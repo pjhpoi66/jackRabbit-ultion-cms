@@ -35,122 +35,72 @@ public class DocumentService {
     private final FileCharsetService fileCharsetService;
 
 
-    public Map<String, Object> getChildFilesDto(String path, String pageNo, Session session) throws Exception {
-        Map<String, Object> newMap = new HashMap<>();
-        if (path.equals("//ROOT/") || path.length() == 1) {
-            return getChildNodes(session, pageNo, FileDto.builder().path("root").build());
-        } else {
-            return getChildNodes(session, pageNo, FileDto.builder().path(path).build());
+    public Map<String, Object> getBuildDtoList(Session session, String path) throws RepositoryException {
+        Map<String, Object> rootMap = new HashMap<>();
+        Map<String, Object> targetMap = rootMap;
+        Node root = session.getRootNode();
+        System.out.println("path:" + path);
+        String[] targetArr = path.split("/"); // 모든 슬러쉬로 경로를 구분
+        Node targetNode = root; //타겟 노드가 반복되면서 마지막 경로까지 사용됨
+        List<FileDto> rootFiles = new ArrayList<>();
+        if (path.equals("/") || path.equals("//")) {
+            targetMap = insertFolderList(targetMap, targetNode);
         }
+        for (int i = 0; i < targetArr.length; i++) { //총 경로의 단계만큼 반목
+            if (i == 0) {
+                targetMap = insertFolderList(targetMap, targetNode);
+            }else {
+                targetNode = targetNode.getNode(targetArr[i]);
+                targetMap = insertFolderList(targetMap, targetNode);
+            }
+        }
+        //페이징
+        List<FileDto> fileDtoList = (List<FileDto>) targetMap.get("fileList");
+        Map<String, Object> returnMap = new HashMap<>();
+        rootMap.put("pagingMap", makePageMap(fileDtoList));
+//        rootMap.put("fileList", fileDtoList);
+//        returnMap.put("children", rootMap);
+        return rootMap;
     }
 
-
-    private Map<String, Object> getChildNodes(Session session, String pageNo, FileDto dto) throws RepositoryException {
-        Map<String, Object> resultMap = new HashMap<>();
-        Node root = session.getRootNode();
-        Node targetNode = dto.getPath().equals("root") ? root : findNode(root, dto);
-        NodeIterator iterator = targetNode.getNodes();
+    private Map<String, Object> insertFolderList(Map<String, Object> targetMap, Node parentNode) throws RepositoryException {
         List<FileDto> dtoList = new ArrayList<>();
-        while (iterator.hasNext()) {
-            Node nowNode = iterator.nextNode();
-            FileDto fileDto = new FileDto();
-            fileDto.setName(nowNode.getName());
-            fileDto.setName(nowNode.getPath());
-            if (nowNode.isNodeType(NodeType.NT_FILE)) {
-                fileDto.setType(FileType.FILE.getValue());
-                fileDto.setLastUpdate(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(
-                        nowNode.getNode(Property.JCR_CONTENT).getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime()));
-                fileDto.setOwner(nowNode.getProperty(Property.JCR_CREATED_BY).getString());
-            } else {
-                fileDto.setType(FileType.FOLDER.getValue());
+        Map<String, Object> resultMap = new HashMap<>();
+        //시작할 id 값을 받고 상위노드의 하위 노드들을 세팅
+        NodeIterator nodeIterator = parentNode.getNodes();
+        while (nodeIterator.hasNext()) {
+            Node nowNode = nodeIterator.nextNode();
+            if (nowNode.getName().contains(":")) { //기본 시스템이름에 : 들어감
+                continue;
             }
-            dtoList.add(fileDto);
+            dtoList.add(FileDto.builder()
+                    .name(nowNode.getName())
+                    .path(nowNode.getPath())
+                    .type(nowNode.isNodeType(NodeType.NT_FOLDER) ? NodeType.NT_FOLDER : NodeType.NT_FILE)
+                    .build()
+            );
         }
-        int childSize = dtoList.size();
-        Pagination pagination = new Pagination();
-        pagination.setPageSize(10);
-        if (pageNo == null) {
-            pagination.setPageNo(2);
-        } else {
-            pagination.setPageNo(Integer.parseInt(pageNo));
-        }
-        pagination.setTotalCount(childSize);
-        int count = 0;
-        if (childSize > pagination.getPageSize()) {
-            int rowNum = pagination.getStartRowNum();
-            List<FileDto> newChildList = new ArrayList<>();
-            while (count < pagination.getPageSize()) { //페이지 사이즈만큼
-                int sum = count + rowNum;
-                if (sum < childSize) {
-                    FileDto fileDto = dtoList.get(sum);
-                    newChildList.add(fileDto);
-                }
-                count++;
-            }
-            dtoList = newChildList;
-        }
+        resultMap.put("fileList", dtoList);
+        resultMap.put("name", parentNode.getName() == null ? "root" : parentNode.getName());
+        targetMap.put("children", resultMap);
+
+        return resultMap;
+    }
+
+    private Map<String, Object> makePageMap(List<FileDto> dtoList) {
         Map<String, Object> pagingMap = new HashMap<>();
+        Pagination pagination = new Pagination();
+        int pageSize = 5;
+        pagination.setPageSize(pageSize);
+        pagination.setPageNo(1);
+        pagination.setTotalCount(dtoList.size());
         pagingMap.put("pageList", pagination.getPageList());
         pagingMap.put("pageNo", pagination.getPageNo());
         pagingMap.put("pageSize", pagination.getPageSize());
         pagingMap.put("prevPageNo", pagination.getPrevPageNo());
         pagingMap.put("nextPageNo", pagination.getNextPageNo());
         pagingMap.put("finalPageNo", pagination.getFinalPageNo());
-        resultMap.put("pagingMap", pagingMap);
-        resultMap.put("fileList", dtoList);
-        return resultMap;
-    }
-
-    public Map<String, Object> searchListByPath(Session session, String path) throws RepositoryException {
-
-        Map<String, Object> resultMap = new HashMap<>();
-        List<FileDto> search = getBuildDtoList(session, path);
-        resultMap.put("searchList", search);
-
-
-        return resultMap;
-    }
-
-    private List<FileDto> getBuildDtoList(Session session, String path) throws RepositoryException {
-        List<FileDto> buildDtoList = new ArrayList<>(); //최종 결과물을 담을 리스트
-        Node root = session.getRootNode();
-        if (path.equals("")) {  //경로를 루트를 받았을경우
-            insertDtoList(buildDtoList, root, FileDto.builder().id(1).build(), 0);
-            return buildDtoList;
-        }
-        String[] targetArr = path.split("/"); // 모든 슬러쉬로 경로를 구분
-        Node targetNode = root; //타겟 노드가 반복되면서 마지막 경로까지 사용됨
-        FileDto targetDto = FileDto.builder().id(0).pid(0).build(); //초기값은 (root) id , pid 0로 시작
-        int startId = insertDtoList(buildDtoList, root, targetDto, 0); //insertDto 는 list 를받고 마지막 id+1 을반환
-        for (int i = 1; i < targetArr.length; i++) { //총 경로의 단계만큼 반목
-            targetNode = targetNode.getNode(targetArr[i]);
-            for (FileDto dto : buildDtoList) {
-                if (dto.getName().equals(targetArr[i])) { //fileDto 리스트중에 현재 찾을 경로의 이름을 가진 dto 를 찾아서 타겟으로설정
-                    targetDto = dto;
-                }
-            }
-            startId = insertDtoList(buildDtoList, targetNode, targetDto, startId);
-        }
-        return buildDtoList;
-    }
-
-    private int insertDtoList(List<FileDto> dtoList, Node parentNode, FileDto parentDto, int startId) throws RepositoryException {
-        int idx = startId;
-        //시작할 id 값을 받고 상위노드의 하위 노드들을 세팅
-        NodeIterator nodeIterator = parentNode.getNodes();
-        while (nodeIterator.hasNext()) {
-            Node nowNode = nodeIterator.nextNode();
-            dtoList.add(FileDto.builder()
-                    .id(idx)
-                    .pid(parentDto.getId())
-                    .name(nowNode.getName())
-                    .path(nowNode.getPath())
-                    .type(nowNode.isNodeType(NodeType.NT_FILE) ? FileType.FILE.getValue() : FileType.FOLDER.getValue())
-                    .build()
-            );
-            idx++;
-        }
-        return idx;
+        return pagingMap;
     }
 
     public Map<String, Object> indexPageLoad(Session session) throws Exception {

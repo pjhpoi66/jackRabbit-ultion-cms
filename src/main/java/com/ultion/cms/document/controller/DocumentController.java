@@ -29,21 +29,21 @@ public class DocumentController {
     @GetMapping("/index")
     public ModelAndView indexPage() throws Exception {
         Map<String, Object> result = documentService.indexPageLoad(session);
+        System.out.println("/index/");
         return new ModelAndView("index", result);
     }
 
     @GetMapping("/index/**")
-    public ModelAndView searchNode (HttpServletRequest request ,@RequestParam(value = "pageNo" , required = false) String pageNo) throws Exception {
-        String path  = request.getRequestURI().split(request.getContextPath() + "/index")[1];
-        Map<String, Object> resultMap = new HashMap<>();
-        resultMap.put("fileMap", documentService.searchListByPath( session,path));
-        return new ModelAndView("index", resultMap);
+    public ModelAndView searchNode(HttpServletRequest request, @RequestParam(value = "pageNo", required = false) String pageNo) throws Exception {
+        String path = request.getRequestURI().split(request.getContextPath() + "/index")[1];
+        Map<String, Object> result = new HashMap<>();
+        result.put("result", documentService.getBuildDtoList(session, path));
+        return new ModelAndView("index",  result);
     }
 
     @PostMapping("/nodeList")
     @ResponseBody
     public ModelAndView getNodeList(@RequestBody Map<String, Object> param) throws Exception {
-//        Map<String, Object> resultMap = documentService.indexPageLoad(session);
         Map<String, Object> resultMap = new HashMap<>();
         resultMap.put("fileMap", documentService.getNodeList(param, session));
         return new ModelAndView("index-content", resultMap);
@@ -81,7 +81,7 @@ public class DocumentController {
      */
     @PostMapping("/download")
     @ResponseBody
-    public void down2(HttpServletRequest request, HttpServletResponse response,  FileDto fileDto) throws Exception {
+    public void down2(HttpServletRequest request, HttpServletResponse response, FileDto fileDto) throws Exception {
         List<FileDto> fileDtos = new ArrayList<>();
         fileDtos.add(fileDto);
         documentService.downLoad(request, response, session, fileDtos);
@@ -92,7 +92,7 @@ public class DocumentController {
      */
     @PostMapping("/download2")
     @ResponseBody
-    public void down(HttpServletRequest request, HttpServletResponse response,  @RequestBody List<FileDto>  fileDtos ) throws Exception {
+    public void down(HttpServletRequest request, HttpServletResponse response, @RequestBody List<FileDto> fileDtos) throws Exception {
         documentService.downLoad(request, response, session, fileDtos);
     }
 

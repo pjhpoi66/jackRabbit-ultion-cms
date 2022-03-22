@@ -12,13 +12,10 @@ import java.util.List;
 public class FileDto {
     //    private String uuid;
     private int id;
-    private int pid;
+    private int pId;
     private String path;
-
     private String name;
     private String contentType;
-
-
     //    private int parentId;
 //    private String status;
     private String owner;

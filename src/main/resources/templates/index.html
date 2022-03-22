@@ -108,7 +108,7 @@
                     <button type="button" class="btn-basic" id="btnUpload"><span>Upload</span></button>
                 </div>
 
-                <th:block th:replace="index-content"></th:block>
+                <!--                <th:block th:replace="index-content"></th:block>-->
 
             </div>
             <input type="hidden" id="node-path">
@@ -127,13 +127,36 @@
 <!-- ztree 관련: https://lee-mandu.tistory.com/507, http://www.treejs.cn/v3/demo.php#_101 -->
 <script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
 <script th:inline="javascript">
-    let dep1List = [[${dep1NodeList}]];
     $(".custom-file-input").on("change", function () {
         let fileName = $(this).val().split("\\").pop();
         $(this).siblings(".custom-file-label").addClass("selected").html(fileName);
         let filePath = $('.file-path').text();
         $('#nodePath').val(filePath);
     });
+    let fileMap = [[${result}]];
+    let folderList = [];
+    let arr = [];
+    let idx = 0;
+    console.log(fileMap);
+
+    while (fileMap.children) {
+        const childrenList = [];
+        fileMap.children.fileList.forEach(file=>{
+            if (file.type.indexOf('folder') !== -1) {
+                childrenList.push({name: file.name});
+            }
+        });
+        console.log(idx + '번쨰', childrenList);
+        arr[idx] = {'children': childrenList}
+        idx++;
+        fileMap = fileMap.children;
+    }
+
+    let child = [];
+    for (let i = 0; i < arr.length; i++) {
+        child.push('children', arr[arr.length-i]);
+    }
+    console.log(child);
 
     let zTreeObj,
         setting = {
@@ -142,19 +165,16 @@
                 dblClickExpand: true
             },
             callback: {
-                onClick: onClick
+                onClick: onClick  //노트 폴더 클릭시 이벤트로 추측됨
             }
         },
         zTreeNodes = [
             {
                 name: "ROOT",
-                nodePath: "",
-                open: true,
-                children: [[${fileMap}]]
+                children:folderList
             }
         ]
 
-    console.log([[${fileMap}]]);
     function checkListener() {
         const checkFiles = document.querySelectorAll('.chk-file');
         const checkedFiles = document.querySelectorAll('.chk-file:checked');
@@ -284,7 +304,6 @@
     }
     ready(() => {
         zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
-        // zTreeObj = jQuery.prototype.zTree.init(document.querySelector('#tree'), setting, zTreeNodes);
     });
 
     // 파일업로드버튼 리스너 달아주기
@@ -440,10 +459,8 @@
             traditional: true,
             cache: false,
         }).done(function (data) {
-            document.querySelector('.table-data').remove();
-            document.querySelector('.pagination-wrap').remove();
-            let fileList = document.querySelector('.file-list');
-            // appendHtml(fileList, data);
+            $('.table-data').remove();
+            $('.pagination-wrap').remove();
             $('.file-list').append(data);
         }).fail(function (request, error) {
             console.log(request.responseText);
