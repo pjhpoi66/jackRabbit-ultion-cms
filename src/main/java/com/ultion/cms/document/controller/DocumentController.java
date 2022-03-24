@@ -37,7 +37,7 @@ public class DocumentController {
     public ModelAndView searchNode(HttpServletRequest request, @RequestParam(value = "pageNo", required = false) String pageNo) throws Exception {
         String path = request.getRequestURI().split(request.getContextPath() + "/index")[1];
         Map<String, Object> result = new HashMap<>();
-        result.put("result", documentService.getBuildDtoList(session, path));
+        result.put("result", documentService.searchListByPath(session, path));
         return new ModelAndView("index",  result);
     }
 

@@ -133,33 +133,22 @@
         let filePath = $('.file-path').text();
         $('#nodePath').val(filePath);
     });
-    let fileMap = [[${result}]];
-    let folderList = [];
-    let arr = [];
-    let idx = 0;
+    // let fileMap = JSON.stringify([[${result.searchList}]]);
+    let fileMap = [[${result.searchList}]];
+
+
     console.log(fileMap);
-
-    while (fileMap.children) {
-        const childrenList = [];
-        fileMap.children.fileList.forEach(file=>{
-            if (file.type.indexOf('folder') !== -1) {
-                childrenList.push({name: file.name});
-            }
-        });
-        console.log(idx + '번쨰', childrenList);
-        arr[idx] = {'children': childrenList}
-        idx++;
-        fileMap = fileMap.children;
-    }
-
-    let child = [];
-    for (let i = 0; i < arr.length; i++) {
-        child.push('children', arr[arr.length-i]);
-    }
-    console.log(child);
-
     let zTreeObj,
         setting = {
+        showLine: false,
+            data: {
+                simpleData: {
+                    enable: true,
+                    // idKey: "id",
+                    // pIdKey: "pid",
+                    // rootPId: "-1"
+                }
+            },
             view: {
                 selectedMulti: false,
                 dblClickExpand: true
@@ -171,7 +160,8 @@
         zTreeNodes = [
             {
                 name: "ROOT",
-                children:folderList
+                id : 0,
+                children: fileMap
             }
         ]
 

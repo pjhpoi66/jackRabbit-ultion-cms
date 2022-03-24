@@ -1,8 +1,7 @@
 package com.ultion.cms.file;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
-
-import java.util.List;
 
 @NoArgsConstructor
 @Getter
@@ -12,12 +11,11 @@ import java.util.List;
 public class FileDto {
     //    private String uuid;
     private int id;
+    @JsonProperty("pId")
     private int pId;
     private String path;
     private String name;
     private String contentType;
-    //    private int parentId;
-//    private String status;
     private String owner;
     private String lastUpdate;
     private String type;

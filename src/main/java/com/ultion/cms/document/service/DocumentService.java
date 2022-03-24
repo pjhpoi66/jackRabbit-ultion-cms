@@ -35,56 +35,61 @@ public class DocumentService {
     private final FileCharsetService fileCharsetService;
 
 
-    public Map<String, Object> getBuildDtoList(Session session, String path) throws RepositoryException {
-        Map<String, Object> rootMap = new HashMap<>();
-        Map<String, Object> targetMap = rootMap;
-        Node root = session.getRootNode();
-        System.out.println("path:" + path);
-        String[] targetArr = path.split("/"); // 모든 슬러쉬로 경로를 구분
-        Node targetNode = root; //타겟 노드가 반복되면서 마지막 경로까지 사용됨
-        List<FileDto> rootFiles = new ArrayList<>();
-        if (path.equals("/") || path.equals("//")) {
-            targetMap = insertFolderList(targetMap, targetNode);
-        }
-        for (int i = 0; i < targetArr.length; i++) { //총 경로의 단계만큼 반목
-            if (i == 0) {
-                targetMap = insertFolderList(targetMap, targetNode);
-            }else {
-                targetNode = targetNode.getNode(targetArr[i]);
-                targetMap = insertFolderList(targetMap, targetNode);
-            }
-        }
-        //페이징
-        List<FileDto> fileDtoList = (List<FileDto>) targetMap.get("fileList");
-        Map<String, Object> returnMap = new HashMap<>();
-        rootMap.put("pagingMap", makePageMap(fileDtoList));
-//        rootMap.put("fileList", fileDtoList);
-//        returnMap.put("children", rootMap);
-        return rootMap;
+
+
+    public Map<String, Object> searchListByPath(Session session, String path) throws RepositoryException {
+        Map<String, Object> resultMap = new HashMap<>();
+        List<FileDto> search = findWithPid(session, path);
+        resultMap.put("searchList", search);
+        return resultMap;
     }
 
-    private Map<String, Object> insertFolderList(Map<String, Object> targetMap, Node parentNode) throws RepositoryException {
-        List<FileDto> dtoList = new ArrayList<>();
-        Map<String, Object> resultMap = new HashMap<>();
+    private List<FileDto> findWithPid(Session session, String path) throws RepositoryException {
+        List<FileDto> buildDtoList = new ArrayList<>(); //최종 결과물을 담을 리스트
+        Node root = session.getRootNode();
+        if (path.equals("")) {  //경로를 루트를 받았을경우
+            insertDtoList(buildDtoList, root, FileDto.builder().id(0).build(), 0);
+            return buildDtoList;
+        }
+        String[] targetArr = path.split("/"); // 모든 슬러쉬로 경로를 구분
+        Node targetNode = root; //타겟 노드가 반복되면서 마지막 경로까지 사용됨
+        FileDto targetDto = FileDto.builder().id(0).pId(0).build(); //초기값은 (root) id , pid 0로 시작
+        int startId = insertDtoList(buildDtoList, root, targetDto, 1); //insertDto 는 list 를받고 마지막 id+1 을반환
+        for (int i = 1; i < targetArr.length; i++) { //총 경로의 단계만큼 반목
+            targetNode = targetNode.getNode(targetArr[i]);
+            for (FileDto dto : buildDtoList) {
+                if (dto.getName().equals(targetArr[i])) { //fileDto 리스트중에 현재 찾을 경로의 이름을 가진 dto 를 찾아서 타겟으로설정
+                    targetDto = dto;
+                }
+            }
+            startId = insertDtoList(buildDtoList, targetNode, targetDto, startId);
+        }
+        return buildDtoList;
+    }
+
+    private int insertDtoList(List<FileDto> dtoList, Node parentNode, FileDto parentDto, int startId) throws RepositoryException {
+        int idx = startId;
         //시작할 id 값을 받고 상위노드의 하위 노드들을 세팅
         NodeIterator nodeIterator = parentNode.getNodes();
         while (nodeIterator.hasNext()) {
             Node nowNode = nodeIterator.nextNode();
-            if (nowNode.getName().contains(":")) { //기본 시스템이름에 : 들어감
+            if(nowNode.getName().contains(":")) { //기본 시스템이름에 : 들어감
                 continue;
             }
-            dtoList.add(FileDto.builder()
-                    .name(nowNode.getName())
-                    .path(nowNode.getPath())
-                    .type(nowNode.isNodeType(NodeType.NT_FOLDER) ? NodeType.NT_FOLDER : NodeType.NT_FILE)
-                    .build()
-            );
+            System.out.println("parent:" + parentDto.getName()+"\tparentId:"+parentDto.getId());
+            if(nowNode.isNodeType(NodeType.NT_FOLDER)) {
+                dtoList.add(FileDto.builder()
+                        .id(idx)
+                        .pId(parentDto.getId())
+                        .name(nowNode.getName())
+                        .path(nowNode.getPath())
+                        .type(nowNode.isNodeType(NodeType.NT_FILE) ? FileType.FILE.getValue() : FileType.FOLDER.getValue())
+                        .build()
+                );
+            };
+            idx++;
         }
-        resultMap.put("fileList", dtoList);
-        resultMap.put("name", parentNode.getName() == null ? "root" : parentNode.getName());
-        targetMap.put("children", resultMap);
-
-        return resultMap;
+        return idx;
     }
 
     private Map<String, Object> makePageMap(List<FileDto> dtoList) {
@@ -297,11 +302,6 @@ public class DocumentService {
                 response.setHeader("Content-Disposition", "attachment; filename=\"".concat(changedFileName).concat("\""));
                 response.setHeader("Content-Transfer-Encoding", "binary");
 
-//                response.setHeader("Content-Disposition", "attachment; filename=" + URLEncoder.encode(dto.getName(), StandardCharsets.UTF_8) + ";");
-//                response.setHeader("Content-Transfer-Encoding", "binary");
-//                response.setContentType("application/octet-stream");
-//                response.setContentLength((int) copyFile.length());
-//                fileCharsetService.setFileName(request, response, dto.getName());
 
                 int read = 0;
                 byte[] buffer = new byte[1024];
