@@ -15,7 +15,6 @@ public class FileDto {
     private int pId;
     private String path;
     private String name;
-    private String contentType;
     private String owner;
     private String lastUpdate;
     private String type;

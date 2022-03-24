@@ -244,7 +244,6 @@
         });
 
         console.log(list);
-        // await download(url, JSON.stringify(list));
     }
 
     onClick('', 'click', ''); //페이지 열면 바로 루트로 들어가게
@@ -252,10 +251,12 @@
     function onClick(event, treeId, treeNode, clickFlag) { //폴더클릭 이벤트
         let nodePath = treeNode;
         if (treeId !== 'click')
-            nodePath = treeNode.nodePath;
+            nodePath = treeNode.path;
 
-        const strLength = nodePath.length;
-        nodePath = nodePath.substr(1, strLength - 1);
+        console.log('treeNode', treeNode);
+
+        const strLength = !nodePath ? 0:nodePath.length;
+        nodePath = strLength === 0 ? '':nodePath.substr(1, strLength - 1);
         document.querySelector('.file-path').innerText = '//ROOT/' + nodePath;
         const param = {};
         param.target = nodePath;
@@ -274,6 +275,9 @@
             document.querySelector('#tree_1_a').className = 'level0';
         }
 
+        console.log('param', param);
+
+        console.log('len', nodePathLen);
 
         if (1 === nodePathLen && nodePath === '')
             param.depth = 1;
@@ -281,8 +285,13 @@
             param.depth = 2;
         else
             param.depth = 3;
+
+
+
         document.getElementById('node-path').value = nodePath;
         document.getElementById('node-depth').value = param.depth;
+
+
         movePage(1, nodePath, param.depth);
 
     }
