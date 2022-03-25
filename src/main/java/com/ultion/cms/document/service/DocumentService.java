@@ -302,7 +302,6 @@ public class DocumentService {
                 response.setHeader("Content-Disposition", "attachment; filename=\"".concat(changedFileName).concat("\""));
                 response.setHeader("Content-Transfer-Encoding", "binary");
 
-
                 int read = 0;
                 byte[] buffer = new byte[1024];
                 while ((read = is.read(buffer)) != -1) { // 1024바이트씩 계속 읽으면서 outputStream에 저장, -1이 나오면 더이상 읽을 파일이 없음

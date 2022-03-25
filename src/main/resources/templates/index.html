@@ -157,13 +157,8 @@
                 onClick: onClick  //노트 폴더 클릭시 이벤트로 추측됨
             }
         },
-        zTreeNodes = [
-            {
-                name: "ROOT",
-                id : 0,
-                children: fileMap
-            }
-        ]
+        zTreeNodes = fileMap
+
 
     function checkListener() {
         const checkFiles = document.querySelectorAll('.chk-file');
@@ -423,6 +418,10 @@
         const param = {};
         param.nodePath = document.querySelector('.file-path').innerText;
         const fileName = param.nodePath.substring(param.nodePath.lastIndexOf('/') + 1);
+        if (!fileName) {
+            alert('루트는 삭제할수없습니다');
+            return;
+        }
         if (!confirm('[' + fileName + ']폴더를 삭제하시겠습니까?')) {
             return;
         }
