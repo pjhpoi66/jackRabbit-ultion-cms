@@ -133,8 +133,7 @@
         let filePath = $('.file-path').text();
         $('#nodePath').val(filePath);
     });
-    // let fileMap = JSON.stringify([[${result.searchList}]]);
-    let fileMap = [[${result.searchList}]];
+    let fileMap = [[${result.folderList}]];
 
 
     console.log(fileMap);
@@ -270,25 +269,46 @@
             document.querySelector('#tree_1_a').className = 'level0';
         }
 
-        console.log('param', param);
-
-        console.log('len', nodePathLen);
-
-        if (1 === nodePathLen && nodePath === '')
-            param.depth = 1;
-        else if (1 === nodePathLen && nodePath !== '')
-            param.depth = 2;
-        else
-            param.depth = 3;
-
-
-
         document.getElementById('node-path').value = nodePath;
         document.getElementById('node-depth').value = param.depth;
 
 
-        movePage(1, nodePath, param.depth);
+        movePage(1, nodePath );
 
+    }
+
+    //페이징
+    function movePage(pageNo, target) {
+        document.getElementById('page-no').value = pageNo;
+        if (target == null) {
+            target = document.getElementById('node-path').value;
+        }
+        const paramData = dataBind(pageNo, target);
+
+        $.ajax({
+            type: 'POST',
+            url: '/nodeList',
+            contentType: 'application/json; charset=utf-8',
+            data: paramData,
+            traditional: true,
+            cache: false,
+        }).done(function (data) {
+            $('.table-data').remove();
+            $('.pagination-wrap').remove();
+            $('.file-list').append(data);
+        }).fail(function (request, error) {
+            console.log(request.responseText);
+            console.log('로딩 실패');
+        });
+    }
+
+
+    function dataBind(pageNo, target) {
+        const data = {};
+        data.pageNo = pageNo;
+        data.target = target;
+        const jsonData = JSON.stringify(data);
+        return jsonData;
     }
 
     //zTree 그리기
@@ -440,47 +460,8 @@
         window.location.href = '/index';
     }
 
-    //페이징
-    function movePage(pageNo, target, depth) {
-        document.getElementById('page-no').value = pageNo;
-        if (target == null && depth == null) {
-            target = document.getElementById('node-path').value;
-            depth = document.getElementById('node-depth').value;
-        }
-        const paramData = dataBind(pageNo, target, depth);
 
-        $.ajax({
-            type: 'POST',
-            url: '/nodeList',
-            contentType: 'application/json; charset=utf-8',
-            data: paramData,
-            traditional: true,
-            cache: false,
-        }).done(function (data) {
-            $('.table-data').remove();
-            $('.pagination-wrap').remove();
-            $('.file-list').append(data);
-        }).fail(function (request, error) {
-            console.log(request.responseText);
-            console.log('로딩 실패');
-        });
-    }
 
-    function appendHtml(el, str) {
-        let child = document.createElement('DIV');
-        child.innerHTML = str;
-        el.appendChild(child);
-    }
-
-    function dataBind(pageNo, target, depth) {
-        const data = {};
-        data.pageNo = pageNo;
-        data.target = target;
-        data.depth = depth;
-
-        const jsonData = JSON.stringify(data);
-        return jsonData;
-    }
 
 </script>
 </html>

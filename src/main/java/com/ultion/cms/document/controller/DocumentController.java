@@ -26,18 +26,12 @@ public class DocumentController {
     private final Session session;
     private final Node root;
 
-    @GetMapping("/index")
-    public ModelAndView indexPage() throws Exception {
-        Map<String, Object> result = documentService.indexPageLoad(session);
-        System.out.println("/index/");
-        return new ModelAndView("index", result);
-    }
 
-    @GetMapping("/index/**")
+    @GetMapping("/index")
     public ModelAndView searchNode(HttpServletRequest request, @RequestParam(value = "pageNo", required = false) String pageNo) throws Exception {
-        String path = request.getRequestURI().split(request.getContextPath() + "/index")[1];
         Map<String, Object> result = new HashMap<>();
-        result.put("result", documentService.searchListByPath(session, path));
+        result.put("target", "");
+        result.put("result", documentService.getNodeList(result,session));
         return new ModelAndView("index",  result);
     }
 

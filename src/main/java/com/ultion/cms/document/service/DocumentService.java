@@ -35,26 +35,27 @@ public class DocumentService {
     private final FileCharsetService fileCharsetService;
 
 
-
-
-    public Map<String, Object> searchListByPath(Session session, String path) throws RepositoryException {
-        Map<String, Object> resultMap = new HashMap<>();
-        List<FileDto> search = findWithPid(session, path);
-        resultMap.put("searchList", search);
-        return resultMap;
-    }
+//    public Map<String, Object> searchListByPath(Session session, String path) throws RepositoryException {
+//        Map<String, Object> resultMap = new HashMap<>();
+//        List<FileDto> search = findWithPid(session, path);
+//        resultMap.put("searchList", search);
+//        return resultMap;
+//    }
 
     private List<FileDto> findWithPid(Session session, String path) throws RepositoryException {
         List<FileDto> buildDtoList = new ArrayList<>(); //최종 결과물을 담을 리스트
         Node root = session.getRootNode();
+        FileDto targetDto = FileDto.builder().name("root").id(-1).pId(-1).build(); //초기값은 (root) id , pid 0로 시작
+
         if (path.equals("")) {  //경로를 루트를 받았을경우
-            insertDtoList(buildDtoList, root, FileDto.builder().id(0).build(), 0);
+            insertDtoList(buildDtoList, root, targetDto, 0, NodeType.NT_FOLDER);
+            buildDtoList.add(targetDto);
             return buildDtoList;
         }
         String[] targetArr = path.split("/"); // 모든 슬러쉬로 경로를 구분
         Node targetNode = root; //타겟 노드가 반복되면서 마지막 경로까지 사용됨
-        FileDto targetDto = FileDto.builder().id(0).pId(0).build(); //초기값은 (root) id , pid 0로 시작
-        int startId = insertDtoList(buildDtoList, root, targetDto, 1); //insertDto 는 list 를받고 마지막 id+1 을반환
+        buildDtoList.add(targetDto);
+        int startId = insertDtoList(buildDtoList, root, targetDto, 1, NodeType.NT_FOLDER); //insertDto 는 list 를받고 마지막 id+1 을반환
         for (int i = 1; i < targetArr.length; i++) { //총 경로의 단계만큼 반목
             targetNode = targetNode.getNode(targetArr[i]);
             for (FileDto dto : buildDtoList) {
@@ -62,214 +63,65 @@ public class DocumentService {
                     targetDto = dto;
                 }
             }
-            startId = insertDtoList(buildDtoList, targetNode, targetDto, startId);
+            startId = insertDtoList(buildDtoList, targetNode, targetDto, startId, NodeType.NT_FOLDER);
         }
         return buildDtoList;
     }
 
-    private int insertDtoList(List<FileDto> dtoList, Node parentNode, FileDto parentDto, int startId) throws RepositoryException {
+    private int insertDtoList(List<FileDto> dtoList, Node parentNode, FileDto parentDto, int startId, String nodeType) throws RepositoryException {
         int idx = startId;
         //시작할 id 값을 받고 상위노드의 하위 노드들을 세팅
         NodeIterator nodeIterator = parentNode.getNodes();
         while (nodeIterator.hasNext()) {
             Node nowNode = nodeIterator.nextNode();
-            if(nowNode.getName().contains(":")) { //기본 시스템이름에 : 들어감
+            if (nowNode.getName().contains(":")) { //기본 시스템이름에 : 들어감
                 continue;
             }
-            System.out.println("parent:" + parentDto.getName()+"\tparentId:"+parentDto.getId());
-            if(nowNode.isNodeType(NodeType.NT_FOLDER)) {
+            System.out.println("name=" + nowNode.getName() + "\tparent:" + parentDto.getName() + "\tparentId:" + parentDto.getId());
+            if (nowNode.isNodeType(nodeType)) {
+                if (nowNode.isNodeType(NodeType.NT_FILE)) {
+                    Node res = nowNode.getNode(Property.JCR_CONTENT);
+                    Date date = res.getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime();
+                    String lastUpdate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
+                }
                 dtoList.add(FileDto.builder()
                         .id(idx)
                         .pId(parentDto.getId())
                         .name(nowNode.getName())
                         .path(nowNode.getPath())
-                        .type(nowNode.isNodeType(NodeType.NT_FILE) ? FileType.FILE.getValue() : FileType.FOLDER.getValue())
+                        .lastUpdate(nowNode.isNodeType(NodeType.NT_FILE) ? new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(nowNode.getNode(Property.JCR_CONTENT).getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime()) : "")
+                        .owner(nowNode.getProperty(Property.JCR_CREATED_BY).getString())
+                        .type(nodeType)
                         .build()
                 );
-            };
+            }
+            ;
             idx++;
         }
         return idx;
     }
 
-    private Map<String, Object> makePageMap(List<FileDto> dtoList) {
-        Map<String, Object> pagingMap = new HashMap<>();
+    private Map<String, Object> makePageMap(List<FileDto> dtoList, String pageNum) {
+        if (pageNum.length() == 0) {
+            pageNum = "1";
+        }
         Pagination pagination = new Pagination();
         int pageSize = 5;
         pagination.setPageSize(pageSize);
-        pagination.setPageNo(1);
         pagination.setTotalCount(dtoList.size());
-        pagingMap.put("pageList", pagination.getPageList());
-        pagingMap.put("pageNo", pagination.getPageNo());
-        pagingMap.put("pageSize", pagination.getPageSize());
-        pagingMap.put("prevPageNo", pagination.getPrevPageNo());
-        pagingMap.put("nextPageNo", pagination.getNextPageNo());
-        pagingMap.put("finalPageNo", pagination.getFinalPageNo());
-        return pagingMap;
-    }
-
-    public Map<String, Object> indexPageLoad(Session session) throws Exception {
-        Map<String, Object> result = new HashMap<>();
-        try {
-            Node root = session.getRootNode();
-            NodeIterator dep1 = root.getNodes();
-            List<Map<String, Object>> dep1NodeList = new ArrayList<>();
-            List<FileDto> rootChildList = new ArrayList<>();
-
-            while (dep1.hasNext()) {
-                Node dep1Node = dep1.nextNode();
-
-                if (!dep1Node.getName().contains(":")) {
-                    FileDto fileDto = new FileDto();
-                    fileDto.setName(dep1Node.getName());
-                    fileDto.setName(dep1Node.getPath());
-                    rootChildList.add(fileDto);
-                }
-
-                NodeIterator dep2 = dep1Node.getNodes();
-                if (!dep1Node.getName().contains(":")) {
-                    Map<String, Object> dep1NodeMap = new HashMap<>();
-
-                    if (dep2.getSize() < 1) {
-                        dep1NodeMap.put("hasChild", false);
-                    } else {
-                        //폴더리스트
-                        dep2 = dep1Node.getNodes();
-                        List<Map<String, Object>> dep2NodeList = new ArrayList<>();
-
-                        while (dep2.hasNext()) {
-                            Node dep2Node = dep2.nextNode();
-
-                            Map<String, Object> dep2NodeMap = new HashMap<>();
-                            dep2NodeMap.put("name", dep2Node.getName());
-                            dep2NodeMap.put("nodePath", dep2Node.getPath());
-
-                            if (dep2Node.isNodeType("nt:folder"))
-                                dep2NodeList.add(dep2NodeMap);
-                        }
-                        dep1NodeMap.put("children", dep2NodeList);
-                        dep1NodeMap.put("hasChild", true);
-                    }
-
-                    dep1NodeMap.put("name", dep1Node.getName());
-                    dep1NodeMap.put("nodePath", dep1Node.getPath());
-                    dep1NodeMap.put("nodeIndex", dep1Node.getIndex());
-
-                    //폴더리스트 데이터들
-                    if (dep1Node.isNodeType("nt:folder"))
-                        dep1NodeList.add(dep1NodeMap);
-                }
-            }
-
-            result.put("dep1NodeList", dep1NodeList);
-
-            int rootChildListSize = rootChildList.size();
-            Pagination pagination = new Pagination();
-            int pageSize = 5;
-            pagination.setPageSize(pageSize);
-            pagination.setPageNo(1);
-            pagination.setTotalCount(rootChildListSize);
-
-            int count = 0;
-            if (rootChildListSize > pageSize) {
-                List<FileDto> newChildList = new ArrayList<>();
-                while (count < pageSize) {
-                    count++;
-                    FileDto fileDto = rootChildList.get(count);
-                    newChildList.add(fileDto);
-                }
-                rootChildList = newChildList;
-            }
-            Map<String, Object> pagingMap = new HashMap<>();
-            pagingMap.put("pageList", pagination.getPageList());
-            pagingMap.put("pageNo", pagination.getPageNo());
-            pagingMap.put("pageSize", pagination.getPageSize());
-            pagingMap.put("prevPageNo", pagination.getPrevPageNo());
-            pagingMap.put("nextPageNo", pagination.getNextPageNo());
-            pagingMap.put("finalPageNo", pagination.getFinalPageNo());
-
-            Map<String, Object> fileMap = new HashMap<>();
-            fileMap.put("fileList", rootChildList);
-            fileMap.put("pagingMap", pagingMap);
-            result.put("fileMap", fileMap);
-
-            session.save();
-        } finally {
-//            session.logout();
-        }
-        return result;
-    }
-
-    public Map<String, Object> getNodeList(Map<String, Object> param, Session session) throws Exception {
-
-        Map<String, Object> resultMap = new HashMap<>();
-        int depth = Integer.parseInt(param.get("depth").toString());
-        String targetString = param.get("target").toString();
-        String[] targetArr = targetString.split("/");
+        pagination.setPageNo(Integer.parseInt(pageNum));
+        int startNum = pageSize * (Integer.parseInt(pageNum) - 1);
 
         List<FileDto> fileList = new ArrayList<>();
-
-        try {
-            Node node = session.getRootNode();
-            if (1 < depth) {
-                for (int i = 0; i < depth - 1; i++) {
-                    node = node.getNode(targetArr[i]);
-                }
-            }
-            NodeIterator fileNodes = node.getNodes();
-
-            while (fileNodes.hasNext()) {
-
-                Node fileNode = fileNodes.nextNode();
-                if (fileNode.isNodeType("nt:file") || fileNode.isNodeType("nt:folder")) {
-                    FileDto fileDto = new FileDto();
-                    fileDto.setName(fileNode.getName());
-                    fileDto.setPath(fileNode.getPath());
-
-
-                    if (fileNode.isNodeType(("nt:file"))) {
-                        Node res = fileNode.getNode(Property.JCR_CONTENT);
-                        Date date = res.getProperty(Property.JCR_LAST_MODIFIED).getDate().getTime();
-                        String lastUpdate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(date);
-                        fileDto.setLastUpdate(lastUpdate);
-                        fileDto.setType(FileType.FILE.getValue());
-                    } else {
-                        fileDto.setLastUpdate("");
-                        fileDto.setType(FileType.FOLDER.getValue());
-                    }
-                    String owner = fileNode.getProperty(Property.JCR_CREATED_BY).getString();
-                    fileDto.setOwner(owner);
-
-                    fileList.add(fileDto);
-                }
-            }
-
-        } finally {
-//            session.logout();
-        }
-
-        int rootChildListSize = fileList.size();
-        Pagination pagination = new Pagination();
-        final int pageSize = 5;
-        pagination.setPageSize(pageSize); //한페이지에 보여줄 컨텐츠 숫자
-        pagination.setPageNo(Integer.parseInt(param.get("pageNo").toString())); //이동하려는 페이지 번호
-        pagination.setTotalCount(rootChildListSize);//총 컨텐츠 숫자
-
-
-        int count = 0;
-        if (rootChildListSize > pageSize) {
-            int rowNum = pagination.getStartRowNum();
+        if (dtoList.size() > pageSize) {
             List<FileDto> newChildList = new ArrayList<>();
-            while (count < pageSize) { //페이지 사이즈만큼
-                int sum = count + rowNum;
-                if (sum < rootChildListSize) {
-                    FileDto fileDto = fileList.get(sum);
-                    newChildList.add(fileDto);
-                }
-                count++;
+            for (int i = 0; startNum + i < dtoList.size(); i++) {
+                FileDto fileDto = dtoList.get(startNum + i);
+                newChildList.add(fileDto);
             }
             fileList = newChildList;
         }
+
         Map<String, Object> pagingMap = new HashMap<>();
         pagingMap.put("pageList", pagination.getPageList());
         pagingMap.put("pageNo", pagination.getPageNo());
@@ -277,10 +129,33 @@ public class DocumentService {
         pagingMap.put("prevPageNo", pagination.getPrevPageNo());
         pagingMap.put("nextPageNo", pagination.getNextPageNo());
         pagingMap.put("finalPageNo", pagination.getFinalPageNo());
-        resultMap.put("pagingMap", pagingMap);
-        resultMap.put("fileList", fileList);
+        pagingMap.put("fileList", fileList);
+        System.out.println("fileLIstSize:" + fileList.size());
+        return pagingMap;
+    }
 
 
+    public Map<String, Object> getNodeList(Map<String, Object> param, Session session) throws Exception {
+        Map<String, Object> resultMap = new HashMap<>();
+        String path = param.get("target").toString();
+        String[] targetArr = path.split("/");
+
+
+        Node root = session.getRootNode();
+        Node fileNode = root;
+
+        if (path.length() != 0) {
+            for (String arr : targetArr) {
+                fileNode = fileNode.getNode(arr);
+            }
+        }
+        List<FileDto> folderList = findWithPid(session, "");
+        List<FileDto> fileList = new ArrayList<>();
+        FileDto targetDto = FileDto.builder().name("root").id(-1).pId(-1).build(); //초기값은 (root) id , pid 0로 시작
+        insertDtoList(fileList, fileNode, targetDto, 1, NodeType.NT_FILE);
+        String pageNo = (param.get("pageNo") == null) ? "1" : param.get("pageNo").toString();
+        resultMap.put("pagingMap", makePageMap(fileList, pageNo));
+        resultMap.put("folderList", folderList);
         return resultMap;
     }
 
