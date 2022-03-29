@@ -111,15 +111,16 @@ public class DocumentService {
         pagination.setTotalCount(dtoList.size());
         pagination.setPageNo(Integer.parseInt(pageNum));
         int startNum = pageSize * (Integer.parseInt(pageNum) - 1);
+        List<FileDto> nowPageView = new ArrayList<>();
 
-        List<FileDto> fileList = new ArrayList<>();
         if (dtoList.size() > pageSize) {
             List<FileDto> newChildList = new ArrayList<>();
-            for (int i = 0; startNum + i < dtoList.size(); i++) {
+            int nowPageCount = dtoList.size() > startNum + pageSize ? pageSize : dtoList.size() - startNum;
+            for (int i = 0; i < nowPageCount; i++) {
                 FileDto fileDto = dtoList.get(startNum + i);
                 newChildList.add(fileDto);
             }
-            fileList = newChildList;
+            nowPageView = newChildList;
         }
 
         Map<String, Object> pagingMap = new HashMap<>();
@@ -129,8 +130,8 @@ public class DocumentService {
         pagingMap.put("prevPageNo", pagination.getPrevPageNo());
         pagingMap.put("nextPageNo", pagination.getNextPageNo());
         pagingMap.put("finalPageNo", pagination.getFinalPageNo());
-        pagingMap.put("fileList", fileList);
-        System.out.println("fileLIstSize:" + fileList.size());
+        pagingMap.put("fileList", nowPageView);
+        System.out.println("fileLIstSize:" + nowPageView.size());
         return pagingMap;
     }
 
