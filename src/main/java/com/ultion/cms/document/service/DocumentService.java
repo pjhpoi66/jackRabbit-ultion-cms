@@ -3,7 +3,6 @@ package com.ultion.cms.document.service;
 import com.ultion.cms.core.web.Pagination;
 import com.ultion.cms.file.FileCharsetService;
 import com.ultion.cms.file.FileDto;
-import com.ultion.cms.file.FileType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.jackrabbit.commons.JcrUtils;
@@ -35,12 +34,6 @@ public class DocumentService {
     private final FileCharsetService fileCharsetService;
 
 
-//    public Map<String, Object> searchListByPath(Session session, String path) throws RepositoryException {
-//        Map<String, Object> resultMap = new HashMap<>();
-//        List<FileDto> search = findWithPid(session, path);
-//        resultMap.put("searchList", search);
-//        return resultMap;
-//    }
 
     private List<FileDto> findWithPid(Session session, String path) throws RepositoryException {
         List<FileDto> buildDtoList = new ArrayList<>(); //최종 결과물을 담을 리스트
@@ -77,7 +70,7 @@ public class DocumentService {
             if (nowNode.getName().contains(":")) { //기본 시스템이름에 : 들어감
                 continue;
             }
-            System.out.println("name=" + nowNode.getName() + "\tparent:" + parentDto.getName() + "\tparentId:" + parentDto.getId());
+//            System.out.println("name=" + nowNode.getName() + "\tparent:" + parentDto.getName() + "\tparentId:" + parentDto.getId());
             if (nowNode.isNodeType(nodeType)) {
                 if (nowNode.isNodeType(NodeType.NT_FILE)) {
                     Node res = nowNode.getNode(Property.JCR_CONTENT);
@@ -96,9 +89,24 @@ public class DocumentService {
                 );
             }
             ;
-            idx++;
+            ++idx;
         }
         return idx;
+    }
+
+    public Map<String, Object> getChildren(int id, Session session, String path , int lastId) throws RepositoryException {
+        List<FileDto> fileDtoList = new ArrayList<>();
+        FileDto targetDto = FileDto.builder().id(id).build();
+        String[] targetArr = path.substring(1).split("/");
+        Node root = session.getRootNode();
+        Node fileNode = root;
+        for (String arr : targetArr) {
+            fileNode = fileNode.getNode(arr);
+        }
+        insertDtoList(fileDtoList, fileNode, targetDto, lastId, NodeType.NT_FOLDER);
+        Map<String, Object> result = new HashMap<>();
+        result.put("folderList", fileDtoList);
+        return result;
     }
 
     private Map<String, Object> makePageMap(List<FileDto> dtoList, String pageNum) {
@@ -131,7 +139,7 @@ public class DocumentService {
         pagingMap.put("nextPageNo", pagination.getNextPageNo());
         pagingMap.put("finalPageNo", pagination.getFinalPageNo());
         pagingMap.put("fileList", nowPageView);
-        System.out.println("fileLIstSize:" + nowPageView.size());
+        System.out.println("fileListSize:" + nowPageView.size());
         return pagingMap;
     }
 
@@ -139,12 +147,10 @@ public class DocumentService {
     public Map<String, Object> getNodeList(Map<String, Object> param, Session session) throws Exception {
         Map<String, Object> resultMap = new HashMap<>();
         String path = param.get("target").toString();
+        System.out.println("getNodeList");
         String[] targetArr = path.split("/");
-
-
         Node root = session.getRootNode();
         Node fileNode = root;
-
         if (path.length() != 0) {
             for (String arr : targetArr) {
                 fileNode = fileNode.getNode(arr);
@@ -152,8 +158,10 @@ public class DocumentService {
         }
         List<FileDto> folderList = findWithPid(session, "");
         List<FileDto> fileList = new ArrayList<>();
-        FileDto targetDto = FileDto.builder().name("root").id(-1).pId(-1).build(); //초기값은 (root) id , pid 0로 시작
+
+        FileDto targetDto = FileDto.builder().name("root").iconOpen(true).id(-1).pId(-1).build(); //초기값은 (root) id , pid 0로 시작
         insertDtoList(fileList, fileNode, targetDto, 1, NodeType.NT_FILE);
+        insertDtoList(fileList, fileNode, targetDto, 1, NodeType.NT_FOLDER);
         String pageNo = (param.get("pageNo") == null) ? "1" : param.get("pageNo").toString();
         resultMap.put("pagingMap", makePageMap(fileList, pageNo));
         resultMap.put("folderList", folderList);

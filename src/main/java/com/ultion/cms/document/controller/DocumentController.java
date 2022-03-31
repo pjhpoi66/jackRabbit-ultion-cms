@@ -31,8 +31,8 @@ public class DocumentController {
     public ModelAndView searchNode(HttpServletRequest request, @RequestParam(value = "pageNo", required = false) String pageNo) throws Exception {
         Map<String, Object> result = new HashMap<>();
         result.put("target", "");
-        result.put("result", documentService.getNodeList(result,session));
-        return new ModelAndView("index",  result);
+        result.put("result", documentService.getNodeList(result, session));
+        return new ModelAndView("index", result);
     }
 
     @PostMapping("/nodeList")
@@ -42,6 +42,18 @@ public class DocumentController {
         resultMap.put("fileMap", documentService.getNodeList(param, session));
         return new ModelAndView("index-content", resultMap);
     }
+
+    @PostMapping("/children/**")
+    @ResponseBody
+    public Map<String, Object> getChildren(HttpServletRequest request, @RequestBody Map<String, Object> param) throws Exception {
+        int id = (int) param.get("id");
+        int lastId = (int) param.get("lastId");
+        System.out.println("last" + lastId);
+        String path = request.getRequestURI().split(request.getContextPath() + "/children")[1];
+        Map<String, Object> result = documentService.getChildren(id, session, path ,lastId);
+        return result;
+    }
+
 
     @PostMapping("/upload")
     @ResponseBody
