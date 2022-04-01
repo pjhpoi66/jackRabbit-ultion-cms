@@ -21,6 +21,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -114,21 +115,24 @@ public class DocumentService {
             pageNum = "1";
         }
         Pagination pagination = new Pagination();
-        int pageSize = 5;
-        pagination.setPageSize(pageSize);
+        int viewSize = 5;
+        pagination.setPageSize(viewSize);
+        dtoList = dtoList.stream().filter(dto -> dto.getType() == NodeType.NT_FILE).collect(Collectors.toList());
         pagination.setTotalCount(dtoList.size());
         pagination.setPageNo(Integer.parseInt(pageNum));
-        int startNum = pageSize * (Integer.parseInt(pageNum) - 1);
+        int startNum = viewSize * (Integer.parseInt(pageNum) - 1);
         List<FileDto> nowPageView = new ArrayList<>();
 
-        if (dtoList.size() > pageSize) {
+        if (dtoList.size() > viewSize) {
             List<FileDto> newChildList = new ArrayList<>();
-            int nowPageCount = dtoList.size() > startNum + pageSize ? pageSize : dtoList.size() - startNum;
+            int nowPageCount = dtoList.size() > startNum + viewSize ? viewSize : dtoList.size() - startNum;
             for (int i = 0; i < nowPageCount; i++) {
                 FileDto fileDto = dtoList.get(startNum + i);
                 newChildList.add(fileDto);
             }
             nowPageView = newChildList;
+        } else {
+            nowPageView = dtoList;
         }
 
         Map<String, Object> pagingMap = new HashMap<>();

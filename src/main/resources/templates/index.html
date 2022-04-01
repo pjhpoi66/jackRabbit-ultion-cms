@@ -112,7 +112,7 @@
 
             </div>
             <input type="hidden" id="node-path">
-            <input type="hidden" id="node-depth">
+<!--            <input type="hidden" id="node-depth">-->
             <input type="hidden" id="page-no">
         </section>
     </div>
@@ -264,7 +264,7 @@
         }
 
         document.getElementById('node-path').value = nodePath;
-        document.getElementById('node-depth').value = param.depth;
+        // document.getElementById('node-depth').value = param.depth;
         if(event !=='root') {
             addSubNode(treeNode, nodePath );
             console.log('fileMap', fileMap)
@@ -272,9 +272,15 @@
         movePage(1, nodePath);
     }
 
-    function addSubNode(treeNode, target ) {
+    function getNowNodes() {
+        //현재 모든 노드들을(폴더) 반환
         let node = zTreeObj.getNodes();
-        let nodes = zTreeObj.transformToArray(node);
+        return  zTreeObj.transformToArray(node);
+
+    }
+
+    function addSubNode(treeNode, target ) {
+        let nodes = getNowNodes();
         let isPresent = false;
         //하위폴더 존재시에는 실행안함
         nodes.forEach(n => {
@@ -442,6 +448,18 @@
         if (addFolderName.length === 0) {
             alert('폴더이름을 지정하지 않았습니다');
             addFolder();
+        }
+        const getNodes = getNowNodes();
+        let isPresent = false;
+        getNodes.forEach(nowNode=>{
+            console.log(nowNode.path);
+            if (nowNode.path === document.querySelector('.file-path').innerText.replace('//ROOT','') + '/' + addFolderName) {
+                isPresent = true;
+            }
+        })
+        if (isPresent) {
+            alert('이미 같은이름의 폴더가 존재합니다');
+            return;
         }
         param.nodePath = document.querySelector('.file-path').innerText;
 
