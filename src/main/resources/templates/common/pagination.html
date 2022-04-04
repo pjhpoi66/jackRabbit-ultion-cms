@@ -7,18 +7,18 @@
             <a href="javascript:movePage(1)">first</a>
         </li>
         <li class="pre">
-            <a th:attr="onclick=|movePage('${fileMap.pagingMap.prevPageNo}')|">{{.}}</a>
+            <a  th:attr="onclick=|movePage('${fileMap.pagingMap.prevPageNo}')|" style="cursor: pointer">{{.}}</a>
         </li>
 
-        <li th:each="pageNo : ${fileMap.pagingMap.pageList}" th:id="|${pageNo}|">
+        <li th:each="pageNo : ${fileMap.pagingMap.pageList}" style="cursor: pointer" th:id="|${pageNo}|">
             <a th:attr="onclick=|movePage('${pageNo}')|" th:text="|${pageNo}|"></a>
         </li>
 
         <li class="next">
-            <a th:attr="onclick=|movePage('${fileMap.pagingMap.nextPageNo}')|">next</a>
+            <a th:attr="onclick=|movePage('${fileMap.pagingMap.nextPageNo}')|" style="cursor: pointer">next</a>
         </li>
         <li class="last">
-            <a th:attr="onclick=|movePage('${fileMap.pagingMap.finalPageNo}')|">last</a>
+            <a th:attr="onclick=|movePage('${fileMap.pagingMap.finalPageNo}')|" style="cursor: pointer">last</a>
         </li>
     </ul>
     <script>

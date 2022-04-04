@@ -49,10 +49,10 @@
                 </ul>
             </div>
             <div class="menu">
-                <a href="#">Edit</a>
+                <a href="#">Sub</a>
                 <ul class="sub-menu">
                     <li>
-                        <a href="#"><span>submenu</span></a>
+                        <a href="#" id="fileDelete" onclick="deleteFiles()"><span>파일 삭제</span></a>
                     </li>
                     <li>
                         <a href="#"><span>submenu</span></a>
@@ -112,7 +112,7 @@
 
             </div>
             <input type="hidden" id="node-path">
-<!--            <input type="hidden" id="node-depth">-->
+            <!--            <input type="hidden" id="node-depth">-->
             <input type="hidden" id="page-no">
         </section>
     </div>
@@ -244,7 +244,7 @@
         let nodePath = treeNode;
         if (eventName !== 'click')
             nodePath = treeNode.path;
-
+        this.open = true;
         const strLength = !nodePath ? 0 : nodePath.length;
         nodePath = strLength === 0 ? '' : nodePath.substr(1, strLength - 1);
         document.querySelector('.file-path').innerText = '//ROOT/' + nodePath;
@@ -265,8 +265,8 @@
 
         document.getElementById('node-path').value = nodePath;
         // document.getElementById('node-depth').value = param.depth;
-        if(event !=='root') {
-            addSubNode(treeNode, nodePath );
+        if (event !== 'root') {
+            addSubNode(treeNode, nodePath);
             console.log('fileMap', fileMap)
         }
         movePage(1, nodePath);
@@ -275,11 +275,11 @@
     function getNowNodes() {
         //현재 모든 노드들을(폴더) 반환
         let node = zTreeObj.getNodes();
-        return  zTreeObj.transformToArray(node);
+        return zTreeObj.transformToArray(node);
 
     }
 
-    function addSubNode(treeNode, target ) {
+    function addSubNode(treeNode, target) {
         let nodes = getNowNodes();
         let isPresent = false;
         //하위폴더 존재시에는 실행안함
@@ -288,7 +288,7 @@
                 isPresent = true;
             }
         });
-        if(!isPresent) {
+        if (!isPresent) {
             $.ajax({
                 cache: true,
                 type: "POST",
@@ -297,7 +297,7 @@
                     'Accept': 'application/json'
                 },
                 url: '/children/' + target,
-                data: JSON.stringify({id: treeNode.id,lastId:nodes.length}),
+                data: JSON.stringify({id: treeNode.id, lastId: nodes.length}),
                 async: true,
                 success: function (data) {
                     console.log(nodes.length);
@@ -350,6 +350,7 @@
         if (document.readyState !== 'loading') callback;
         else document.addEventListener('DOMContentLoaded', callback);
     }
+
     ready(() => {
         zTreeObj = $.fn.zTree.init($("#tree"), setting, zTreeNodes);
     });
@@ -451,11 +452,12 @@
         }
         const getNodes = getNowNodes();
         let isPresent = false;
-        getNodes.forEach(nowNode=>{
+        getNodes.forEach(nowNode => {
             console.log(nowNode.path);
-            if (nowNode.path === document.querySelector('.file-path').innerText.replace('//ROOT','') + '/' + addFolderName) {
+            if (nowNode.path === document.querySelector('.file-path').innerText.replace('//ROOT/', '') + '/' + addFolderName) {
                 isPresent = true;
-            }
+            } else if (nowNode.path === document.querySelector('.file-path').innerText.replace('//ROOT', '') + '/' + addFolderName)
+                isPresent = true;
         })
         if (isPresent) {
             alert('이미 같은이름의 폴더가 존재합니다');
@@ -480,6 +482,55 @@
             }).catch(e => console.log(e));
     }
 
+
+    function deleteFile(path, fileName) {
+        const param = {};
+        param.nodePath = path;
+        param.fileName = fileName;
+        return fetch('/fileDelete', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(param)
+        }).then(res => res.json());
+    }
+
+    async function oneFileDelete(button) {
+        const param = {};
+        const root = button.parentElement.parentElement;
+        const path = root.querySelector('.filePath').innerText;
+        const fileName = root.querySelector('.fileName').innerText;
+        if (!confirm('[' + fileName + '] 를 삭제 하시겠습니까?')) return;
+        param.nodePath = path;
+        param.fileName = fileName;
+        deleteFile(path, fileName).then(json => {
+            if (json['delResult']) {
+                alert(fileName + ' 삭제 성공');
+            } else {
+                alert(fileName + '삭제 실패');
+            }
+        }).catch(e => console.log(e));
+        window.location.href = '/index';
+    }
+
+    function deleteFiles() {
+        const checkList = document.querySelectorAll('.chk-file:checked');
+        if (checkList.length === 0) {
+            alert('선택한 파일이없습니다');
+            return;
+        }
+        if(!confirm(checkList.length+' 개의 파일을 삭제 하시겠습니까?')) return;
+        checkList.forEach(checked => {
+            const parent = checked.parentElement.parentElement;
+            const name = parent.querySelector('.fileName').innerText;
+            const path = parent.querySelector('.filePath').innerText;
+            deleteFile(path, name);
+        });
+        alert(checkList.length + ' 파일 삭제 완료');
+        window.location.href = '/index';
+    }
 
     function deleteFolder() {
         const param = {};

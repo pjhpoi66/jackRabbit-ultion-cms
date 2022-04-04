@@ -1,0 +1,35 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<div class="pagination-wrap" th:fragment="userPage">
+
+    <ul class="pagination">
+        <li class="first">
+            <a href="#">first</a>
+        </li>
+        <li class="pre">
+            <a   style="cursor: pointer">{{.}}</a>
+        </li>
+
+<!--        <li th:each="pageNo : ${fileMap.pagingMap.pageList}" style="cursor: pointer" th:id="|${pageNo}|">-->
+<!--            <a th:attr="onclick=|movePage('${pageNo}')|" th:text="|${pageNo}|"></a>-->
+<!--        </li>-->
+
+        <li class="next">
+            <a  style="cursor: pointer">next</a>
+        </li>
+        <li class="last">
+            <a  style="cursor: pointer">last</a>
+        </li>
+    </ul>
+    <script>
+
+        $(function () {
+            let pageNos = $('#page-no').val();
+            if (pageNos == '' || pageNos == null) {
+                pageNos = 1;
+            }
+            $('#' + pageNos).addClass("active");
+        });
+    </script>
+</div>
+</html>

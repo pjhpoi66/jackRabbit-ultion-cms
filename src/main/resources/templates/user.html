@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=3.0"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="format-detection" content="telephone=no"/>
+    <title>Content list - Ultion Heasdless CMS</title>
+    <meta name="apple-mobile-web-app-title" content="UCMS"/>
+    <meta name="robots" content="index,nofollow"/>
+    <meta name="description" content="Ultion Headless CMS"/>
+    <meta property="og:title" content="UCMS"/>
+    <meta property="og:url" content="http://www.ultion.co.kr/"/>
+    <meta property="og:image" content="http://www.ultion.co.kr/"/>
+    <meta property="og:description" content="http://www.ultion.co.kr/"/>
+    <link rel="shortcut icon" href="/static/assets/images/favicon.png"/>
+    <link rel="stylesheet" href="/static/assets/css/zTreeStyle.css" type="text/css"/>
+    <link rel="stylesheet" href="/static/assets/css/style.css"/>
+    <script src="/static/assets/js/lib/jquery.min.js"></script>
+</head>
+
+<body>
+<div class="wrap">
+    <header class="header">
+        <h1 class="logo">
+            <a href="/user"><span>Clinic</span></a>
+        </h1>
+        <div class="gnb-menu">
+            <div class="menu">
+                <a href="#">User</a>
+                <ul class="sub-menu" id="fileMenu">
+                    <li>
+                        <a href="#" class="delete-folder" onclick="deleteFolder()"><span>유저정보</span></a>
+                    </li>
+                </ul>
+            </div>
+            <div class="menu">
+                <a href="#">Sub</a>
+                <ul class="sub-menu">
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                    <li>
+                        <a href="#"><span>submenu</span></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        <div class="header-member">
+            <div class="user">
+
+            </div>
+        </div>
+    </header>
+
+    <div class="wrapper" id="content">
+        <section class="contents">
+            <div class="file-list">
+                <div class="file-tree">
+                    <div class="tree-wrap">
+                        <ul id="tree" class="ztree"></ul>
+                    </div>
+                </div>
+                <div class="file-path-box">
+                    <div class="table-wrap table-row">
+                        <table>
+                            <colgroup>
+                                <col style="width: 100px"/>
+                                <col style="width: auto"/>
+                            </colgroup>
+                            <tbody>
+                            <tr>
+                                <th scope="row" class="center">유저 정보</th>
+                                <th scope="row" class="center">id</th>
+                                <th scope="row" class="center">pw</th>
+                                <th scope="row" class="center">registerDate</th>
+                                <th scope="row" class="center"></th>
+                                <td>
+                                    <span class="userList"></span>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <th:block th:replace="user-content"></th:block>
+
+            </div>
+        </section>
+    </div>
+</div>
+<footer>
+    <div class="footer-inner">
+        <p class="copyright">© 2022 ULTION All rights reserves.</p>
+    </div>
+</footer>
+
+</body>
+<!-- ztree 관련: https://lee-mandu.tistory.com/507, http://www.treejs.cn/v3/demo.php#_101 -->
+<script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
+<script th:inline="javascript">
+</script>
+</html>

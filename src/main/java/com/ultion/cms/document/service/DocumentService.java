@@ -312,6 +312,24 @@ public class DocumentService {
     }
 
 
+    public boolean deleteFile(Map<String, Object> param, Session session) {
+        boolean isSuccess = false;
+        String nodePath = param.get("nodePath").toString();
+        String fileName = "/"+param.get("fileName").toString();
+        nodePath = nodePath.replaceAll("//ROOT/", "");
+        try {
+            Node root = session.getRootNode();
+            Node targetNode = findResourceNode(root, FileDto.builder().path(nodePath).name(fileName).build());
+            targetNode.remove();
+            session.save();
+//            session.logout();
+            isSuccess = true;
+        } catch (Exception e) {
+            log.debug(e.getMessage());
+        }
+        return isSuccess;
+    }
+
     //노드 삭제
     public boolean deleteNode(Map<String, Object> param, Session session) {
         boolean isSuccess = false;

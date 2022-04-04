@@ -73,6 +73,17 @@ public class DocumentController {
         return result;
     }
 
+    /**
+    *   파일 삭제
+     */
+    @PostMapping("/fileDelete")
+    @ResponseBody
+    public Map<String, Object> deleteFile(@RequestBody Map<String, Object> param) throws Exception {
+        Map<String, Object> result = new HashMap<>();
+        boolean delResult = documentService.deleteFile(param, session);
+        result.put("delResult", delResult);
+        return result;
+    }
     @PostMapping("/folderDelete")
     @ResponseBody
     public Map<String, Object> deleteNode(@RequestBody Map<String, Object> param) throws Exception {
@@ -111,6 +122,4 @@ public class DocumentController {
         Node reNamingNode = documentService.findNode(root, FileDto.builder().path(path).build());
         return documentService.reNamingFile(reNamingNode, map.get("reName"));
     }
-
-
 }
