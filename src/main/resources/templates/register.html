@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <meta charset="UTF-8">
+    <title>회원가입</title>
+</head>
+<body>
+<form action="/register" method="post" id="registerForm">
+    아이디:<input id="userId" name='userId' type="text">
+    비밀번호:<input id="pw" name="pw" type="password">
+    비밀번호 확인:<input id="pwCheck" name="pwCheck" type="password">
+    <input type="button" onclick="submitValidation()" value="회원가입">
+</form>
+
+<script>
+    async function submitValidation() {
+        const userId = document.querySelector('#userId').value;
+        const pw = document.querySelector('#pw').value;
+        const pwCheck = document.querySelector('#pwCheck').value;
+
+        if (pw !== pwCheck) {
+            alert('비밀번호가 서로 일치하지 않습니다');
+            return;
+        }
+
+        await fetch('/register', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify({userId: userId, pw: pw}),
+            method: 'post',
+        }).then(res => res.text()
+        ).then(text => {
+            if (text==='success') {
+                alert('회원가입에 성공하였습니다');
+                window.location.href = '/login';
+            } else if (text==='already') {
+                alert('이미 존재하는 아이디입니다.');
+                return;
+            } else {
+                console.log(text);
+                alert('회원가입 실패');
+                return;
+            }
+        })
+
+    }
+
+
+</script>
+</body>
+</html>

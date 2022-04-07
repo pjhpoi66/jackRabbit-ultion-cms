@@ -21,13 +21,23 @@ public class UserService {
         return userRepository.findAll(pageable);
     }
 
+    public User login(User requestUser) {
+        User checkUser = userRepository.findByUserId(requestUser.getUserId());
+        if (checkUser != null) {
+            if (checkUser.getPw().equals(requestUser.getPw())) {
+                return checkUser;
+            }
+        }
+        return null;
+    }
 
-    public boolean register(String id , String pw) {
-        if (userRepository.findByUserId(id)) {
-            return false;
+
+    public String register(String id, String pw) {
+        if (userRepository.findByUserId(id) != null) {
+            return "already";
         } else {
             userRepository.save(User.builder().userId(id).pw(pw).build());
-            return true;
+            return "success";
         }
     }
 

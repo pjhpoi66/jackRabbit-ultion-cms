@@ -1,11 +1,11 @@
 package com.ultion.cms.user.controller;
 
+import com.ultion.cms.user.entity.User;
 import com.ultion.cms.user.repository.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.HashMap;
@@ -15,7 +15,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-
 
 
     @GetMapping("/user")
@@ -36,9 +35,32 @@ public class UserController {
         userService.searchAllUser(pageNo, onePageView, sort).hasPrevious();
         userService.searchAllUser(pageNo, onePageView, sort).nextPageable();
         userService.searchAllUser(pageNo, onePageView, sort).nextPageable();
-
-        map.put("userList",userService.searchAllUser(pageNo,onePageView,sort));
-        return new ModelAndView("/user",map);
+        map.put("userList", userService.searchAllUser(pageNo, onePageView, sort));
+        return new ModelAndView("/user", map);
     }
 
+    @GetMapping("/login")
+    public String loginPage() {
+        return "login";
+    }
+
+    @PostMapping("/login")
+    @ResponseBody
+    public User LoginAction(@RequestBody User user) {
+        return userService.login(user);
+    }
+
+    @GetMapping("/register")
+    public String registerPage() {
+        return "register";
+    }
+
+    @PostMapping("/register")
+    @ResponseBody
+    public String registerAction(@RequestBody  User user) {
+        String success = userService.register(user.getUserId(), user.getPw());
+        Map<String, Object> result = new HashMap<>();
+        result.put("success", success);
+        return success;
+    }
 }

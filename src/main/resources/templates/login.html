@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<html lang="ko" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<form th:action="@{/login}" method="post">
+    <div>
+        로그인 <input name="userId" id="userId" type="text">
+    </div>
+    <div>
+        비밀번호 <input name="pw" id="pw" type="password">
+    </div>
+    <input type="button" onclick="loginAction()" th:value="로그인">
+    <button type="button" onclick="location.href = '/register'">회원가입</button>
+</form>
+
+
+<script>
+    async function loginAction() {
+        const userId = document.querySelector('#userId').value;
+        const pw = document.querySelector('#pw').value;
+        await fetch('/login', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify({userId: userId, pw: pw}),
+            method: 'post',
+        }).then(res => res.json()
+        ).then(json => {
+            if (json.userId) {
+                console.log(json);
+                alert(json.userId + '님 안녕하세요!');
+                window.location.href = '/index';
+            } else {
+                console.log(json);
+                alert('로그인에 실패했습니다 ');
+
+            }
+        });
+    }
+</script>
+
+</body>
+</html>
