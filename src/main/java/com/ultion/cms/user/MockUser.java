@@ -1,9 +1,7 @@
 package com.ultion.cms.user;
 
-import com.ultion.cms.user.entity.User;
 import com.ultion.cms.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Component

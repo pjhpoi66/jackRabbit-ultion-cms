@@ -1,12 +1,12 @@
 package com.ultion.cms.user.repository;
 
-import com.ultion.cms.user.entity.User;
+import com.ultion.cms.user.entity.UserEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
-    User findByUserId(String id);
+    UserEntity findByUserId(String id);
 
 
 }

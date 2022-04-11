@@ -24,7 +24,7 @@
 <div class="wrap">
     <header class="header">
         <h1 class="logo">
-            <a href="/user"><span>Clinic</span></a>
+            <a href="/userEntity"><span>Clinic</span></a>
         </h1>
         <div class="gnb-menu">
             <div class="menu">
@@ -51,7 +51,7 @@
             </div>
         </div>
         <div class="header-member">
-            <div class="user">
+            <div class="userEntity">
 
             </div>
         </div>
@@ -87,7 +87,7 @@
                         </table>
                     </div>
                 </div>
-                <th:block th:replace="user-content"></th:block>
+                <th:block th:replace="userEntity-content"></th:block>
 
             </div>
         </section>
@@ -125,7 +125,7 @@
                 alert(userId + '삭제 실패');
             }
         }).catch(e => console.log(e));
-        window.location.href = '/user';
+        window.location.href = '/userEntity';
     }
     function userModifyReq(userId , changePw) {
         const param = {}
@@ -152,7 +152,7 @@
                 alert(userId + '변경 실패');
             }
         }).catch(e => console.log(e));
-        window.location.href = '/user';
+        window.location.href = '/userEntity';
     }
 </script>
 </html>

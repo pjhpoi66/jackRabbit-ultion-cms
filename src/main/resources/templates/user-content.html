@@ -1,5 +1,5 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<div class="table-wrap table-col table-data" th:fragment="user-content">
+<div class="table-wrap table-col table-data" th:fragment="userEntity-content">
     <table>
         <colgroup>
             <col style="width: 50px"/>
@@ -27,15 +27,15 @@
                 <img src="/static/assets/images/no-data.png" alt="No data found"/>
             </td>
         </tr>
-        <tr th:each="user : ${userList}">
+        <tr th:each="userEntity : ${userList}">
             <td class="chk-path">
-                <input type="checkbox" class="chk-file" th:value="|${user.idx}|" onchange="checkListener()">
+                <input type="checkbox" class="chk-file" th:value="|${userEntity.idx}|" onchange="checkListener()">
             </td>
-            <td class=" userId" th:text="|${user.userId}|" ></td>
-            <td class=" userPw" th:text="|${user.pw}|" ></td>
-            <td class=" register"  th:text="|${user.registerDateTime}|"></td>
+            <td class=" userId" th:text="|${userEntity.userId}|" ></td>
+            <td class=" userPw" th:text="|${userEntity.pw}|" ></td>
+            <td class=" register"  th:text="|${userEntity.registerDateTime}|"></td>
             <td th:text="1"></td>
-<!--            <td th:text="|${user.lastModified}|"></td>-->
+<!--            <td th:text="|${userEntity.lastModified}|"></td>-->
             <td>
                 <button type="button" class="btn-basic" onclick="deleteUser(this)"><span>Delete</span></button>
                 <button type="button" class="btn-basic btnDownload" onclick="modifyUser(this)"><span>Modify</span></button>

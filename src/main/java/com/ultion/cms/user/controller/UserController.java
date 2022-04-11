@@ -1,6 +1,6 @@
 package com.ultion.cms.user.controller;
 
-import com.ultion.cms.user.entity.User;
+import com.ultion.cms.user.entity.UserEntity;
 import com.ultion.cms.user.repository.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
@@ -46,8 +46,8 @@ public class UserController {
 
     @PostMapping("/login")
     @ResponseBody
-    public User LoginAction(@RequestBody User user) {
-        return userService.login(user);
+    public UserEntity LoginAction(@RequestBody UserEntity userEntity) {
+        return userService.login(userEntity);
     }
 
     @GetMapping("/register")
@@ -57,8 +57,8 @@ public class UserController {
 
     @PostMapping("/register")
     @ResponseBody
-    public String registerAction(@RequestBody User user) {
-        String success = userService.register(user.getUserId(), user.getPw());
+    public String registerAction(@RequestBody UserEntity userEntity) {
+        String success = userService.register(userEntity.getUserId(), userEntity.getPw());
         Map<String, Object> result = new HashMap<>();
         result.put("success", success);
         return success;
@@ -76,8 +76,8 @@ public class UserController {
     @ResponseBody
     public Map<String, Object> changeUserInfo(@RequestBody Map<String,Object> param) {
         Map<String, Object> result = new HashMap<>();
-        User resultUser = userService.changePw((String) param.get("userId"), (String) param.get("changePw"));
-        if(resultUser == null) {
+        UserEntity resultUserEntity = userService.changePw((String) param.get("userId"), (String) param.get("changePw"));
+        if(resultUserEntity == null) {
             result.put("result", "fail");
         } else {
             result.put("result", "success");

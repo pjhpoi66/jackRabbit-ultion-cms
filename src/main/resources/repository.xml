@@ -16,7 +16,7 @@
     <FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem">
         <param name="driver" value="com.mysql.jdbc.Driver"/>
         <param name="url" value="jdbc:mysql://localhost:3307/jackrabbit" />
-        <param name="user" value="jackrabbit" />
+        <param name="userEntity" value="jackrabbit" />
         <param name="password" value="jackrabbit" />
         <param name="schema" value="mysql"/>
         <param name="schemaObjectPrefix" value="J_R_FS_"/>
@@ -46,7 +46,7 @@
         <PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager">
             <param name="driver" value="com.mysql.jdbc.Driver"/>
             <param name="url" value="jdbc:mysql://localhost:3307/jackrabbit" />
-            <param name="user" value="jackrabbit" />
+            <param name="userEntity" value="jackrabbit" />
             <param name="password" value="jackrabbit" />
             <param name="schema" value="mysql" />
             <param name="schemaObjectPrefix" value="J_PM_${wsp.name}_" />
@@ -55,7 +55,7 @@
         <FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem">
             <param name="driver" value="com.mysql.jdbc.Driver"/>
             <param name="url" value="jdbc:mysql://localhost:3307/jackrabbit" />
-            <param name="user" value="jackrabbit" />
+            <param name="userEntity" value="jackrabbit" />
             <param name="password" value="jackrabbit" />
             <param name="schema" value="mysql"/>
             <param name="schemaObjectPrefix" value="J_FS_${wsp.name}_"/>
@@ -78,7 +78,7 @@
         <FileSystem class="org.apache.jackrabbit.core.fs.db.DbFileSystem">
             <param name="driver" value="com.mysql.jdbc.Driver"/>
             <param name="url" value="jdbc:mysql://localhost:3307/jackrabbit" />
-            <param name="user" value="jackrabbit" />
+            <param name="userEntity" value="jackrabbit" />
             <param name="password" value="jackrabbit" />
             <param name="schema" value="mysql"/>
             <param name="schemaObjectPrefix" value="J_V_FS_"/>
@@ -86,7 +86,7 @@
         <PersistenceManager class="org.apache.jackrabbit.core.state.db.SimpleDbPersistenceManager">
             <param name="driver" value="com.mysql.jdbc.Driver"/>
             <param name="url" value="jdbc:mysql://localhost:3307/jackrabbit" />
-            <param name="user" value="jackrabbit" />
+            <param name="userEntity" value="jackrabbit" />
             <param name="password" value="jackrabbit" />
             <param name="schema" value="mysql" />
             <param name="schemaObjectPrefix" value="J_V_PM_" />
@@ -109,7 +109,7 @@
 			<param name="revision" value="${rep.home}/revision"/>
 			<param name="driver" value="com.mysql.jdbc.Driver"/>
 			<param name="url" value="jdbc:mysql://localhost/jcr"/>
-			<param name="user" value=""/>
+			<param name="userEntity" value=""/>
 			<param name="password" value=""/>
 			<param name="schema" value="mysql"/>
 			<param name="schemaObjectPrefix" value="J_C_"/>
