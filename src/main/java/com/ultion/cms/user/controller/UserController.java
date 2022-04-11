@@ -57,10 +57,32 @@ public class UserController {
 
     @PostMapping("/register")
     @ResponseBody
-    public String registerAction(@RequestBody  User user) {
+    public String registerAction(@RequestBody User user) {
         String success = userService.register(user.getUserId(), user.getPw());
         Map<String, Object> result = new HashMap<>();
         result.put("success", success);
         return success;
     }
+
+    @PostMapping("/userDelete")
+    @ResponseBody
+    public Map<String, Object> deleteUser(@RequestBody String userId) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("result", userService.deleteUser(userId));
+        return result;
+    }
+
+    @PostMapping("/changeUserInfo")
+    @ResponseBody
+    public Map<String, Object> changeUserInfo(@RequestBody Map<String,Object> param) {
+        Map<String, Object> result = new HashMap<>();
+        User resultUser = userService.changePw((String) param.get("userId"), (String) param.get("changePw"));
+        if(resultUser == null) {
+            result.put("result", "fail");
+        } else {
+            result.put("result", "success");
+        }
+        return result;
+    }
+
 }

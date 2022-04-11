@@ -14,4 +14,7 @@
     <bean id="jcrRepository" class="org.apache.jackrabbit.core.RepositoryImpl">
         <constructor-arg index="0" ref="jcrConfig" />
     </bean>
+
+
+
 </beans>

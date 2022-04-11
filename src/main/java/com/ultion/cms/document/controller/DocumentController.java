@@ -78,7 +78,7 @@ public class DocumentController {
      */
     @PostMapping("/fileDelete")
     @ResponseBody
-    public Map<String, Object> deleteFile(@RequestBody Map<String, Object> param) throws Exception {
+    public Map<String, Object> deleteFile(@RequestBody Map<String, Object> param) {
         Map<String, Object> result = new HashMap<>();
         boolean delResult = documentService.deleteFile(param, session);
         result.put("delResult", delResult);
@@ -86,7 +86,7 @@ public class DocumentController {
     }
     @PostMapping("/folderDelete")
     @ResponseBody
-    public Map<String, Object> deleteNode(@RequestBody Map<String, Object> param) throws Exception {
+    public Map<String, Object> deleteNode(@RequestBody Map<String, Object> param) {
         Map<String, Object> result = new HashMap<>();
         boolean delResult = documentService.deleteNode(param, session);
         result.put("delResult", delResult);
@@ -117,7 +117,6 @@ public class DocumentController {
     @PostMapping("/reName")
     @ResponseBody
     public String reNaming(@RequestBody Map<String, String> map) throws RepositoryException {
-        ModelAndView modelAndView = new ModelAndView("redirect:/index");
         String path = map.get("path").substring(6);
         Node reNamingNode = documentService.findNode(root, FileDto.builder().path(path).build());
         return documentService.reNamingFile(reNamingNode, map.get("reName"));

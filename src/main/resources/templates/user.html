@@ -102,6 +102,57 @@
 </body>
 <!-- ztree 관련: https://lee-mandu.tistory.com/507, http://www.treejs.cn/v3/demo.php#_101 -->
 <script type="text/javascript" src="/static/assets/js/lib/jquery.ztree.core.js"></script>
-<script th:inline="javascript">
+<script>
+    function userDeleteReq(userId) {
+        return fetch('/userDelete', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: userId
+        }).then(res => res.json());
+    }
+
+    async function deleteUser(button) {
+        const root = button.parentElement.parentElement;
+        const userId = root.querySelector('.userId').innerText;
+        if (!confirm('[' + userId + '] 를 삭제 하시겠습니까?')) return;
+        await userDeleteReq(userId).then(json => {
+            if (json['result'] === 'success') {
+                alert(userId + ' 삭제 성공');
+            } else {
+                alert(userId + '삭제 실패');
+            }
+        }).catch(e => console.log(e));
+        window.location.href = '/user';
+    }
+    function userModifyReq(userId , changePw) {
+        const param = {}
+        param.userId = userId;
+        param.changePw = changePw;
+        return fetch('/changeUserInfo', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json;charset=utf-8'
+            },
+            body: JSON.stringify(param)
+        }).then(res => res.json());
+    }
+
+    async function modifyUser(button) {
+        const root = button.parentElement.parentElement;
+        const userId = root.querySelector('.userId').innerText;
+        const changePw = prompt('[' + userId + ']의 변경할 비밀번호를 입력해주세요.');
+        await userModifyReq(userId,changePw).then(json => {
+            if (json['result'] === 'success') {
+                alert(userId + ' 변경 성공');
+            } else {
+                alert(userId + '변경 실패');
+            }
+        }).catch(e => console.log(e));
+        window.location.href = '/user';
+    }
 </script>
 </html>

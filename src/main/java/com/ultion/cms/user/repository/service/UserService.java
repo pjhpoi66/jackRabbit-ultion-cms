@@ -7,14 +7,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @RequiredArgsConstructor
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder encoder;
+
 
     public Page<User> searchAllUser(int pageNo, int onePageView, Sort sort) {
         Pageable pageable = PageRequest.of(pageNo - 1, onePageView, sort);
@@ -35,15 +40,33 @@ public class UserService {
     public String register(String id, String pw) {
         if (userRepository.findByUserId(id) != null) {
             return "already";
-        } else {
-            userRepository.save(User.builder().userId(id).pw(pw).build());
-            return "success";
         }
+        userRepository.save(User.builder().userId(id).pw(encoder.encode(pw)).build());
+        return "success";
     }
 
-    public void changePw(User user, String pw) {
-        User findUser = userRepository.findById(user.getIdx()).get();
-        findUser.setPw(pw);
+    public String deleteUser(String userId) {
+        User findUser = userRepository.findByUserId(userId);
+
+        if (findUser != null) {
+            userRepository.delete(findUser);
+
+            return "success";
+        }
+        return "fail";
     }
+
+    @Transactional
+    public User changePw(String userId, String changePw) {
+        User findUser = userRepository.findByUserId(userId);
+        findUser.setPw(changePw);
+        return userRepository.save(findUser);
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String userId) throws UsernameNotFoundException {
+        return userRepository.findByUserId(userId);
+    }
+
 
 }

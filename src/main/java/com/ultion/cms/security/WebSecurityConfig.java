@@ -1,43 +1,49 @@
-package security;
+package com.ultion.cms.security;
 
-import com.ultion.cms.user.repository.service.UserService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.ComponentScan;
+
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 
-//@Configuration
+@Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-    private final UserService userService;
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
+                .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/index/**","index","/").permitAll()    // LoadBalancer Chk
-                .anyRequest().authenticated()
+                .antMatchers("/login","register").permitAll()
+//                .antMatchers("/index").authenticated()
+//                .antMatchers("/user").hasRole("ADMIN")
                 .and()
                 .formLogin()
                 .loginPage("/login")
-                .usernameParameter("id")
-                .passwordParameter("pw")
-                .defaultSuccessUrl("/", true)
+                .successForwardUrl("/index")
+                .failureForwardUrl("/login")
                 .permitAll()
                 .and()
                 .logout();
-        ;
+
+    }
+
+    @Bean
+    public BCryptPasswordEncoder encoder(){
+        return new BCryptPasswordEncoder();
     }
 
     @Override
     public void configure(WebSecurity web) throws Exception{
         web.ignoring()
+
                 .antMatchers("/resources/**")
+                .antMatchers("/resources/templates/**")
                 .antMatchers("/css/**")
                 .antMatchers("/vendor/**")
                 .antMatchers("/favicon*/**")

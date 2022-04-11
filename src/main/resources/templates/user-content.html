@@ -31,14 +31,14 @@
             <td class="chk-path">
                 <input type="checkbox" class="chk-file" th:value="|${user.idx}|" onchange="checkListener()">
             </td>
-            <td class=" fileName" th:text="|${user.userId}|" ></td>
-            <td class=" fileName" th:text="|${user.pw}|" ></td>
-            <td class=" filePath"  th:text="|${user.registerDateTime}|"></td>
+            <td class=" userId" th:text="|${user.userId}|" ></td>
+            <td class=" userPw" th:text="|${user.pw}|" ></td>
+            <td class=" register"  th:text="|${user.registerDateTime}|"></td>
             <td th:text="1"></td>
 <!--            <td th:text="|${user.lastModified}|"></td>-->
             <td>
-                <button type="button" class="btn-basic" onclick="oneFileDelete(this)"><span>Delete</span></button>
-                <button type="button" class="btn-basic btnDownload" onclick="oneFileDown(this)"><span>Download</span></button>
+                <button type="button" class="btn-basic" onclick="deleteUser(this)"><span>Delete</span></button>
+                <button type="button" class="btn-basic btnDownload" onclick="modifyUser(this)"><span>Modify</span></button>
             </td>
         </tr>
         </tbody>

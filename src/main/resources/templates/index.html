@@ -482,37 +482,7 @@
     }
 
 
-    function deleteFile(path, fileName) {
-        const param = {};
-        param.nodePath = path;
-        param.fileName = fileName;
-        return fetch('/fileDelete', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json;charset=utf-8'
-            },
-            body: JSON.stringify(param)
-        }).then(res => res.json());
-    }
 
-    async function oneFileDelete(button) {
-        const param = {};
-        const root = button.parentElement.parentElement;
-        const path = root.querySelector('.filePath').innerText;
-        const fileName = root.querySelector('.fileName').innerText;
-        if (!confirm('[' + fileName + '] 를 삭제 하시겠습니까?')) return;
-        param.nodePath = path;
-        param.fileName = fileName;
-        deleteFile(path, fileName).then(json => {
-            if (json['delResult']) {
-                alert(fileName + ' 삭제 성공');
-            } else {
-                alert(fileName + '삭제 실패');
-            }
-        }).catch(e => console.log(e));
-        window.location.href = '/index';
-    }
 
     function deleteFiles() {
         const checkList = document.querySelectorAll('.chk-file:checked');
@@ -525,7 +495,7 @@
             const parent = checked.parentElement.parentElement;
             const name = parent.querySelector('.fileName').innerText;
             const path = parent.querySelector('.filePath').innerText;
-            deleteFile(path, name);
+            userDeleteReq(path, name);
         });
         alert(checkList.length + ' 파일 삭제 완료');
         window.location.href = '/index';
